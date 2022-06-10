@@ -18,6 +18,13 @@ nltk.download('wordnet')
 nltk.download('omw-1.4')
 stop_words = set(stopwords.words('english'))
 
+# utilizzo di una GPU su scheda grafica locale
+sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
+physical_devices = tf.config.list_physical_devices("GPU")
+physical_devices
+
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
 """parser = argparse.ArgumentParser()
 parser.add_argument('input_file', help='File .csv containing the dataset')
 args = parser.parse_args()
