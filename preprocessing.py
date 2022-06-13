@@ -1,16 +1,13 @@
 import csv
-from email.mime import base
 import string
 import pandas as pd
 import tensorflow as tf
-import argparse
 import nltk
 from nltk.stem.porter import PorterStemmer
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 # Activate TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
-from torch import _fake_quantize_learnable_per_tensor_affine
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -21,8 +18,6 @@ stop_words = set(stopwords.words('english'))
 # utilizzo di una GPU su scheda grafica locale
 sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
 physical_devices = tf.config.list_physical_devices("GPU")
-physical_devices
-
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 """parser = argparse.ArgumentParser()
@@ -31,6 +26,7 @@ args = parser.parse_args()
 input_file = args.input_file"""
 
 base_dir = ''
+
 maldonado_input_file = base_dir + 'datasets/maldonado-dataset.csv'
 maldonado_output_file_binary = base_dir + 'features-matrices/maldonado-features-matrices-binary.csv'
 maldonado_output_file_multiclass = base_dir + 'features-matrices/maldonado-features-matrices-multiclass.csv'
