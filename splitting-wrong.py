@@ -9,7 +9,6 @@ from sklearn.model_selection import StratifiedShuffleSplit
 import collections
 import os, shutil
 from pathlib import Path
-from sklearn.model_selection import KFold
 
 # utilizzo di una GPU su scheda grafica locale
 sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
@@ -32,7 +31,7 @@ def labels_from_text_to_int(np_labels_text, is_binary_classification) :
     
     if is_binary_classification : 
         for x in np_labels_text : 
-            if(x == 'WITHOUT_CLASSIFICATION') :
+            if np.where(text == x) == [] :
                 labels = np.append(labels, [0])
             else :
                 labels = np.append(labels, [1])
@@ -88,38 +87,63 @@ def create_train_and_test(input_file, output_folder, is_binary_classification) :
     df_dataset = df_features
     # create a new column to insert the label number
     df_dataset.insert(df_dataset.shape[1], 'n_label', np_labels.tolist()) 
+    # create a new column to insert the number of split set in order to then create 10 different sets
+    np_zeros = np.zeros(shape=(df_features.shape[0],)).astype(int)
+    df_dataset.insert(df_dataset.shape[1], 'n_split_set', np.zeros(df_features.shape[0], dtype=np.int64)) 
     
     # shuffle the dataset
     df_dataset = df_dataset.sample(frac=1, random_state=12)#.reset_index(drop=True)
     print(df_dataset.head(), df_dataset.shape)
-    
 
-    features_set = df_dataset.loc[:, df_dataset.columns != 'n_label']#.reset_index()
-    labels_set = df_dataset['n_label']
-    x, y = np.array(features_set), np.array(labels_set)
-    set_number = 1
+    if is_binary_classification :
+        df_dataset = split_in_ten_sets_binary(df_dataset)
+    else :
+        df_dataset = split_in_ten_sets_multiclass(df_dataset)
+    
+    sum = 0
     # save dataframes into 10 folders (Round1, ...)
+    for set_number in range(1, 11) :
+        print("\n SET ", set_number)
+        subset = df_dataset.loc[df_dataset['n_split_set'] == set_number]
+        #print(subset.head())
+        sum = sum + subset.shape[0]
+        #print("SET", set_number, subset.shape)
+        #print(subset['n_label'].value_counts())
 
-    kf = KFold(n_splits=10, shuffle=True, random_state=42, )
-    print(kf)
+        whole_set = subset.iloc[:, :subset.shape[1]-1]#.reset_index()
+        features_set = whole_set.loc[:, whole_set.columns != 'n_label']#.reset_index()
+        labels_set = whole_set['n_label']
+        #print(labels_set.value_counts())
+        assert features_set.shape[0] == labels_set.shape[0]
+        assert (np.array(features_set.index) == np.array(labels_set.index)).all()
+        """print(whole_set.head())
+        print(features_set.head())
+        print(labels_set.head())
+        print(features_set.index)
+        print(labels_set.index)"""
 
-    for train_index, test_index in kf.split(x, y):
-        print("\nSET: ", set_number)
+        x, y = np.array(features_set), np.array(labels_set)
 
-        #print("TRAIN:", train_index, "TEST:", test_index)
-        x_train, x_test = x[train_index], y[test_index]
-        y_train, y_test = y[train_index], y[test_index]
-    
+        splitter = StratifiedShuffleSplit(n_splits=1, test_size=0.25, random_state=42)
+        for train_index, test_index in splitter.split(x, y):
+            #print("TRAIN:", train_index, "TEST:", test_index)
+            x_train, x_test = x[train_index], y[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+
+
         #x_train, x_test, y_train, y_test = train_test_split(features_set, labels_set, test_size=0.1, random_state=42, stratify=labels_set)
         print("TRAIN: ", x_train.shape, y_train.shape)
+        #print(np.unique(y_train))
         unique_elements, counts_elements = np.unique(y_train, return_counts=True)
         print(np.asarray((unique_elements, counts_elements)))
         print("TEST: ", x_test.shape, y_test.shape)
+        #print(np.unique(y_test))
         unique_elements, counts_elements = np.unique(y_test, return_counts=True)
         print(np.asarray((unique_elements, counts_elements)))
-    
+
+        
         # check dimension of the split and every label in every set
-        assert x_train.shape[0] + x_test.shape[0] == df_dataset.shape[0]
+        assert x_train.shape[0] + x_test.shape[0] == whole_set.shape[0]
         if is_binary_classification :
             val = (0 in y_train and 1)
             assert val == True
@@ -141,13 +165,71 @@ def create_train_and_test(input_file, output_folder, is_binary_classification) :
         np.savetxt(path + '/testing_data.csv', x_test, delimiter=",", fmt="%f")
         np.savetxt(path + '/testing_labels.csv', y_test.astype(int), delimiter=",", fmt="%i")
 
-        set_number = set_number + 1 
+        
+    
+
+    # check that there are no leftovers
+    assert df_dataset.shape[0] == sum
+    assert df_dataset.loc[df_dataset['n_split_set'] == 0].empty == True
+
+    
 
 
-#create_train_and_test(debthunter_input_file_multiclass, "DatasetD2/multiclass/", False)
+# assign to the index in the split their own set_number
+def assign_set_number(df_dataset, split) :
+    for set_number in range(1, 11) :
+            sub_split = split[set_number-1]
 
-#create_train_and_test(maldonado_input_file_multiclass, "DatasetD1/multiclass/", False)
+            for index in sub_split : 
+                df_dataset.at[index, 'n_split_set'] = set_number
+                #print(df_dataset.at[index, 'n_split_set'])
+        
+    return df_dataset
 
-create_train_and_test(debthunter_input_file_binary, "DatasetD2/binary/", True)
 
-create_train_and_test(maldonado_input_file_binary, "DatasetD1/binary/", True)
+def split_in_ten_sets_binary(df_dataset) :
+    # 0-1 (labels)
+    for label in range(2) :
+        # take the subset with that specific label number
+        df_based_on_label = df_dataset.loc[df_dataset['n_label'] == label]
+
+        # take and split indexes into 10 
+        indexes = df_based_on_label.index.to_numpy()
+        split = np.array_split(indexes, 10)
+
+        # check the split operation
+        assert df_based_on_label.shape[0] == sum([sub.size for sub in indexes])
+
+        df_dataset = assign_set_number(df_dataset, split)
+
+        # check there are no leftovers (rows with n_split_set to be assigned)
+        assert df_dataset.loc[(df_dataset['n_split_set'] == 0) & (df_dataset['n_label'] == label)].empty == True
+
+    return df_dataset
+
+
+def split_in_ten_sets_multiclass(df_dataset) :
+    # from 0 to 4 (labels)
+    for label in range(5) :
+        # take the subset with that specific label number
+        df_based_on_label = df_dataset.loc[df_dataset['n_label'] == label]
+
+        # take and split indexes into 10 
+        indexes = df_based_on_label.index.to_numpy()
+        split = np.array_split(indexes, 10)
+
+        # check the split operation
+        assert df_based_on_label.shape[0] == sum([sub.size for sub in indexes])
+
+        df_dataset = assign_set_number(df_dataset, split)
+            
+        # check there are no leftovers (rows with n_split_set to be assigned)
+        assert df_dataset.loc[(df_dataset['n_split_set'] == 0) & (df_dataset['n_label'] == label)].empty == True
+        
+    return df_dataset
+    
+
+
+create_train_and_test(debthunter_input_file_multiclass, "DatasetD2/multiclass/", False)
+
+create_train_and_test(maldonado_input_file_multiclass, "DatasetD1/multiclass/", False)
