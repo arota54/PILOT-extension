@@ -17,11 +17,11 @@ physical_devices = tf.config.list_physical_devices("GPU")
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 base_dir = ''
-maldonado_input_file_binary = base_dir + 'features-matrices/maldonado-features-matrices-binary.csv'
-maldonado_input_file_multiclass = base_dir + 'features-matrices/maldonado-features-matrices-multiclass.csv'
+maldonado_input_file_binary = base_dir + 'binary/features-matrices/maldonado-features-matrices-binary.csv'
+maldonado_input_file_multiclass = base_dir + 'multiclass/features-matrices/maldonado-features-matrices-multiclass.csv'
 
-debthunter_input_file_binary = base_dir + 'features-matrices/debthunter-features-matrices-binary.csv'
-debthunter_input_file_multiclass = base_dir + 'features-matrices/debthunter-features-matrices-multiclass.csv'
+debthunter_input_file_binary = base_dir + 'binary/features-matrices/debthunter-features-matrices-binary.csv'
+debthunter_input_file_multiclass = base_dir + 'multiclass/features-matrices/debthunter-features-matrices-multiclass.csv'
 
 
 # for multiclass: 0 - DESIGN, 1 - DEFECT, 2 - IMPLEMENTATION, 3 - DOCUMENTATION, 4 - TEST
@@ -92,12 +92,20 @@ def create_train_and_test(input_file, output_folder, is_binary_classification) :
     # shuffle the dataset
     df_dataset = df_dataset.sample(frac=1, random_state=12)#.reset_index(drop=True)
     print(df_dataset.head(), df_dataset.shape)
+    pd.set_option('display.max_rows', None)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', None)
+    pd.set_option('display.max_colwidth', -1)
+    pd.set_option('display.float_format', '{:.20f}'.format)
+    print(df_dataset.loc[1])
     
 
     features_set = df_dataset.loc[:, df_dataset.columns != 'n_label']#.reset_index()
+    
     labels_set = df_dataset['n_label']
     x, y = np.array(features_set), np.array(labels_set)
     set_number = 1
+    print(features_set.shape, labels_set.shape)
     # save dataframes into 10 folders (Round1, ...)
 
     kf = KFold(n_splits=10, shuffle=True, random_state=42, )
@@ -107,7 +115,7 @@ def create_train_and_test(input_file, output_folder, is_binary_classification) :
         print("\nSET: ", set_number)
 
         #print("TRAIN:", train_index, "TEST:", test_index)
-        x_train, x_test = x[train_index], y[test_index]
+        x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
     
         #x_train, x_test, y_train, y_test = train_test_split(features_set, labels_set, test_size=0.1, random_state=42, stratify=labels_set)
@@ -134,20 +142,30 @@ def create_train_and_test(input_file, output_folder, is_binary_classification) :
         #print(x_train)
 
         path = output_folder + 'Round' + str(set_number)
-        os.mkdir(path)            
+        os.mkdir(path)   
+
+        print(x_train)
+        training_data = pd.DataFrame(x_train)
+        training_labels = pd.DataFrame(y_train, dtype=int)
+        testing_data = pd.DataFrame(x_test)
+        testing_labels = pd.DataFrame(y_test, dtype=int)
+
+        print(training_data.shape, training_labels.shape, testing_data.shape, testing_labels.shape)
+
+        """training_data.to_csv(path + '/training_data.csv', index=False, header=False)
+        training_labels.to_csv(path + '/training_labels.csv', index=False, header=False)
+        testing_data.to_csv(path + '/testing_data.csv', index=False, header=False)
+        testing_labels.to_csv(path + '/testing_labels.csv', index=False, header=False)"""
         # save train and test as csv
-        np.savetxt(path + '/training_data.csv', x_train, delimiter=",", fmt="%f")
+        np.savetxt(path + '/training_data.csv', x_train, delimiter=",", fmt="%.20f")
         np.savetxt(path + '/training_labels.csv', y_train.astype(int), delimiter=",", fmt="%i")
-        np.savetxt(path + '/testing_data.csv', x_test, delimiter=",", fmt="%f")
+        np.savetxt(path + '/testing_data.csv', x_test, delimiter=",", fmt="%.20f")
         np.savetxt(path + '/testing_labels.csv', y_test.astype(int), delimiter=",", fmt="%i")
 
         set_number = set_number + 1 
 
 
-#create_train_and_test(debthunter_input_file_multiclass, "DatasetD2/multiclass/", False)
-
-#create_train_and_test(maldonado_input_file_multiclass, "DatasetD1/multiclass/", False)
-
-create_train_and_test(debthunter_input_file_binary, "DatasetD2/binary/", True)
-
-create_train_and_test(maldonado_input_file_binary, "DatasetD1/binary/", True)
+#create_train_and_test(debthunter_input_file_multiclass, "multiclass/DatasetD2/", False) #doesn't work becasue the are not enough samples
+create_train_and_test(maldonado_input_file_multiclass, "multiclass/DatasetD1/rounds/", False)
+create_train_and_test(debthunter_input_file_binary, "binary/DatasetD2/rounds/", True)
+create_train_and_test(maldonado_input_file_binary, "binary/DatasetD1/rounds/", True)

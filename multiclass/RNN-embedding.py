@@ -8,12 +8,16 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 # Activate TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
 
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('omw-1.4')
 stop_words = set(stopwords.words('english'))
+VOCAB_SIZE = 1000
+BUFFER_SIZE = 10000
+BATCH_SIZE = 64
 
 # utilizzo di una GPU su scheda grafica locale
 sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
@@ -28,12 +32,12 @@ input_file = args.input_file"""
 base_dir = ''
 
 maldonado_input_file = base_dir + 'datasets/maldonado-dataset.csv'
-maldonado_output_file_binary = base_dir + 'binary/features-matrices/maldonado-features-matrices-binary.csv'
-maldonado_output_file_multiclass = base_dir + 'multiclass/features-matrices/maldonado-features-matrices-multiclass.csv'
+maldonado_output_file_binary = base_dir + 'features-matrices/maldonado-features-matrices-binary.csv'
+maldonado_output_file_multiclass = base_dir + 'features-matrices/maldonado-features-matrices-multiclass.csv'
 
 debthunter_input_file = base_dir + 'datasets/debthunter-dataset.csv'
-debthunter_output_file_binary = base_dir + 'binary/features-matrices/debthunter-features-matrices-binary.csv'
-debthunter_output_file_multiclass = base_dir + 'multiclass/features-matrices/debthunter-features-matrices-multiclass.csv'
+debthunter_output_file_binary = base_dir + 'features-matrices/debthunter-features-matrices-binary.csv'
+debthunter_output_file_multiclass = base_dir + 'features-matrices/debthunter-features-matrices-multiclass.csv'
 
 
 def clean_term(text):
@@ -89,8 +93,22 @@ def create_feature_matrices(BINARY_CLASSIFICATION, DATASET):
                 else:
                     comments.append(row[0])
                     classifications.append(row[1])
+        print(len(comments), len(classifications))
 
-    vect = TfidfVectorizer()
+        arr = np.asarray(comments)
+
+        print(arr.shape, arr)
+        print(classifications[0])
+
+        """encoder = tf.keras.layers.TextVectorization(max_tokens=VOCAB_SIZE)
+        encoder.adapt(comments)
+
+        vocab = np.array(encoder.get_vocabulary())
+        print(vocab[:20])"""
+
+        
+
+    """vect = TfidfVectorizer()
     vects = vect.fit_transform(comments)
 
     # Select all rows from the data set
@@ -111,14 +129,13 @@ def create_feature_matrices(BINARY_CLASSIFICATION, DATASET):
         term_document_matrix = term_document_matrix.drop(columns=['total_count'])
 
     if BINARY_CLASSIFICATION:
-        term_document_matrix.T.to_csv(OUTPUT_FILE_BINARY)
+            term_document_matrix.T.to_csv(OUTPUT_FILE_BINARY)
     else:
         term_document_matrix.T.to_csv(OUTPUT_FILE_MULTICLASS)
 
-    print(term_document_matrix.T.shape)
+    print(term_document_matrix.T.shape)"""
 
-
-create_feature_matrices(True, True) # Maldonado binary
+#create_feature_matrices(True, True) # Maldonado binary
 create_feature_matrices(False, True) # Maldonado multiclass
-create_feature_matrices(True, False) # DebtHunter binary
-create_feature_matrices(False, False) # DebtHunter multiclass
+#create_feature_matrices(True, False) # DebtHunter binary
+#create_feature_matrices(False, False) # DebtHunter multiclass
