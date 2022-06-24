@@ -6,6 +6,7 @@ import nltk
 from nltk.stem.porter import PorterStemmer
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+import re
 # Activate TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -54,6 +55,8 @@ def standardize(text):
             # if text is not a number
             if not text.isdigit():
                 result = result + ' ' + stemmer.stem(wordnet_lemmatizer.lemmatize(text))
+
+    print(result)
     return result
 
 
@@ -118,7 +121,7 @@ def create_feature_matrices(BINARY_CLASSIFICATION, DATASET):
     print(term_document_matrix.T.shape)
 
 
-create_feature_matrices(True, True) # Maldonado binary
+"""create_feature_matrices(True, True) # Maldonado binary
 create_feature_matrices(False, True) # Maldonado multiclass
-create_feature_matrices(True, False) # DebtHunter binary
+create_feature_matrices(True, False) # DebtHunter binary"""
 create_feature_matrices(False, False) # DebtHunter multiclass
