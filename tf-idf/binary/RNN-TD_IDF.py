@@ -89,6 +89,7 @@ def load_data(path) :
     """==============read training data=============="""
     raw_data = open(path+'/training_data.csv', 'rt')
     tr_d = np.loadtxt(raw_data, delimiter=",") # np array
+    #tr_d = np.resize(tr_d, (tr_d.shape[0], 1, tr_d.shape[1]))
           
     raw_data = open(path+'/training_labels.csv', 'rt')
     tr_l = np.loadtxt(raw_data, delimiter=",").astype(int)
@@ -97,6 +98,7 @@ def load_data(path) :
     """==============read validation data=============="""
     raw_data = open(path+'/validation_data.csv', 'rt')
     val_d = np.loadtxt(raw_data, delimiter=",")
+    #val_d = np.resize(val_d, (tr_d.shape[0], 1, val_d.shape[1]))
 
     raw_data = open(path+'/validation_labels.csv', 'rt')
     val_l = np.loadtxt(raw_data, delimiter=",").astype(int)
@@ -105,6 +107,7 @@ def load_data(path) :
     """==============read testing data=============="""
     raw_data = open(path+'/testing_data.csv', 'rt')
     te_d = np.loadtxt(raw_data, delimiter=",")
+    #te_d = np.resize(te_d, (te_d.shape[0], 1, te_d.shape[1]))
 
     raw_data = open(path+'/testing_labels.csv', 'rt')
     te_l = np.loadtxt(raw_data, delimiter=",").astype(int)
@@ -118,14 +121,16 @@ def create_model(shape) :
 
     model = tf.keras.Sequential(
         [
-            tf.keras.layers.Embedding(input_dim=shape, output_dim=64),
-            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)),
+            tf.keras.layers.Embedding(input_dim=shape, output_dim=64, trainable=False),
+            tf.keras.layers.LSTM(64, dropout=0.5),
             tf.keras.layers.Dense(64, activation='relu'),
             tf.keras.layers.Dense(1, activation='sigmoid')
         ]
     )
     
-    model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=0.05), 
+    #opt = optimizers.Adam(learning_rate=1, beta_1=0.9)
+    opt = optimizers.SGD(learning_rate=0.05)
+    model.compile(optimizer=opt, 
                   loss=tf.keras.losses.BinaryCrossentropy(), 
                   metrics=['accuracy'])
     
@@ -149,6 +154,8 @@ def model_fit(x_train, y_train, x_val, y_val, model) :
 def run(path) :
     print("Load data")
     x_train, y_train, x_val, y_val, x_test, y_test = load_data(path)
+
+    print(x_train[0])
 
     history = []
     predictions = []
