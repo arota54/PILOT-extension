@@ -29,13 +29,13 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 base_dir = ''
 
-maldonado_input_file = base_dir + 'word2vec/datasets/maldonado-dataset.csv'
+maldonado_input_file = base_dir + 'datasets/maldonado-dataset.csv'
 maldonado_output_file_binary = base_dir + 'word2vec/binary/DatasetD1/df-maldonado-binary.csv'
 maldonado_output_file_multiclass = base_dir + 'word2vec/multiclass/DatasetD1/df-maldonado-multiclass.csv'
 maldonado_output_folder_multiclass = base_dir + 'word2vec/multiclass/DatasetD1/'
 maldonado_output_folder_binary = base_dir + 'word2vec/binary/DatasetD1/'
 
-debthunter_input_file = base_dir + 'word2vec/datasets/debthunter-dataset.csv'
+debthunter_input_file = base_dir + 'datasets/debthunter-dataset.csv'
 debthunter_output_file_binary = base_dir + 'word2vec/binary/DatasetD2/df-debthunter-binary.csv'
 debthunter_output_file_multiclass = base_dir + 'word2vec/multiclass/DatasetD2/df-debthunter-multiclass.csv'
 debthunter_output_folder_multiclass = base_dir + 'word2vec/multiclass/DatasetD2/'
@@ -59,10 +59,10 @@ def standardize(text):
             text = clean_term(w)
             # if text is not a number
             if not text.isdigit():
-                text = text.replace("'", "")
+                # text = text.replace("'", "")
                 result = result + ' ' + stemmer.stem(wordnet_lemmatizer.lemmatize(text))
 
-    
+    #print(result)
     return result
 
 
@@ -97,7 +97,7 @@ def read_comments_and_labels():
                     projects_name.append(row[0])
                     classifications.append(row[1])
                 else:
-                    string = remove_single_quotes(row[0])
+                    #string = remove_single_quotes(row[0])
                     #print(string)
                     comments.append(string)
                     classifications.append(row[1])
@@ -157,7 +157,7 @@ def delete_folder(path) :
 
 def word2vec(x_train, x_validation, x_test, output_folder):
     print("Start word2vec")
-    max_words = 15000
+    max_words = 7000
     tokenizer = kprocessing.text.Tokenizer(lower=True, split=' ', num_words=max_words, oov_token="<pad>", filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
     tokenizer.fit_on_texts(x_train)
     voc = tokenizer.word_index
@@ -212,7 +212,8 @@ def main(binary_classification, dataset) :
     delete_folder(output_folder)
 
     comments, labels = read_comments_and_labels() 
-    MAX_LEN = len(max(comments, key=len))
+    #MAX_LEN = len(max(comments, key=len))
+    MAX_LEN = 2000
     print(MAX_LEN)
 
     df = create_dataframe(comments, labels)

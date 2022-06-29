@@ -12,16 +12,29 @@ import collections
 from sklearn.model_selection import StratifiedShuffleSplit
 from keras_tqdm import TQDMNotebookCallback
 from keras import regularizers
+from torch import dropout
+import os
+from tensorflow.keras import models, layers, optimizers
 
+
+from keras.layers import Dense, Input, GlobalMaxPooling1D, MaxPool1D, GlobalMaxPool1D
+from keras.layers import Conv1D, MaxPooling1D, Embedding, Flatten, Dropout
+from keras.models import Model
+
+"""os.environ["CUDA_VISIBLE_DEVICES"]="-1"   
+config = tf.compat.v1.ConfigProto(
+        device_count = {'GPU': 0}
+    )
+sess = tf.compat.v1.Session(config=config) """
 
 base_dir = ''
-epochs = 40
+epochs = 5
 batch_size = 64
 
 # utilizzo di una GPU su scheda grafica locale
-"""sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
+sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
 physical_devices = tf.config.list_physical_devices("GPU")
-tf.config.experimental.set_memory_growth(physical_devices[0], True)"""
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 
 def plot_history(loss, accuracy, val_loss, val_accuracy, path) :
@@ -50,15 +63,16 @@ def plot_history(loss, accuracy, val_loss, val_accuracy, path) :
 
 def predict_labels(x_test, model) :
     predictions = model.predict(x_test)
-    predictions_labels = np.argmax(predictions, axis=1)
+    #predictions_labels = np.argmax(predictions, axis=1)
+    predictions_labels = (predictions > 0.5).astype(np.int8)
+    print(np.equal(predictions_labels, np.round(predictions)).all())
     return predictions_labels
 
 
-def plot_cm(predictions, y_test) :
+def plot_cm(predictions, y_test, path) :
     print(classification_report(y_test, predictions))
     
     cm = confusion_matrix(y_test, predictions)
-    plt.figure()
     plt.figure(figsize=(10,10), dpi = 70)
     ax = plt.subplot()
     sns.heatmap(cm, annot=True, fmt='g', ax=ax, cmap='YlGnBu')
@@ -67,48 +81,44 @@ def plot_cm(predictions, y_test) :
     ax.set_ylabel('True labels')
     ax.set_title('Confusion Matrix')
 
+    plt.savefig(path + 'cm.png')
+
 
 # load training and testing data from CSV files
 def load_data(path) :
     """==============read training data=============="""
     raw_data = open(path+'/training_data.csv', 'rt')
     tr_d = np.loadtxt(raw_data, delimiter=",") # np array
-    #tr_d = np.resize(tr_d, (tr_d.shape[0], 1, tr_d.shape[1]))
           
     raw_data = open(path+'/training_labels.csv', 'rt')
     tr_l = np.loadtxt(raw_data, delimiter=",").astype(int)
     print("Train: ", tr_d.shape, collections.Counter(tr_l))
+
+    """==============read validation data=============="""
+    raw_data = open(path+'/validation_data.csv', 'rt')
+    val_d = np.loadtxt(raw_data, delimiter=",")
+
+    raw_data = open(path+'/validation_labels.csv', 'rt')
+    val_l = np.loadtxt(raw_data, delimiter=",").astype(int)
+    print("Validation: ", val_d.shape, collections.Counter(val_l))
     
     """==============read testing data=============="""
     raw_data = open(path+'/testing_data.csv', 'rt')
     te_d = np.loadtxt(raw_data, delimiter=",")
-    print("Test: ", te_d.shape)
-    #te_d = np.resize(te_d, (te_d.shape[0], 1, te_d.shape[1]))
 
     raw_data = open(path+'/testing_labels.csv', 'rt')
     te_l = np.loadtxt(raw_data, delimiter=",").astype(int)
     print("Test: ", te_d.shape, collections.Counter(te_l))
     
-    return (tr_d, tr_l, te_d, te_l)
+    return (tr_d, tr_l, val_d, val_l, te_d, te_l)
 
 
 def create_model(shape) : 
-    """model = tf.keras.Sequential()
-    x = tf.keras.layers.Input(shape=(1, shape))
-    #xx = tf.keras.layers.Reshape((1372, 1), input_shape=(1372, ))(x)
-    xx = tf.keras.Embedding(input_dim=shape, output_dim=64)
-    xx = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64))(x)"""
-    #xx = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64))(x)
-    """xx = tf.keras.layers.Dense(512, activation='relu')(xx)
-    xx = tf.keras.layers.Dense(256, activation='relu')(xx)"""
-    """xx = tf.keras.layers.Dropout(0.2)(xx)
-    xx = tf.keras.layers.Dense(64, activation='relu')(xx)
-    xx = tf.keras.layers.Dense(1, activation='sigmoid')(xx)
-    model = tf.keras.Model(x, xx)"""
+    print("Shape features: ", shape)
 
     model = tf.keras.Sequential(
         [
-            tf.keras.layers.Embedding(input_dim=shape[1], output_dim=64),
+            tf.keras.layers.Embedding(input_dim=shape, output_dim=64),
             tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)),
             tf.keras.layers.Dense(64, activation='relu'),
             tf.keras.layers.Dense(1, activation='sigmoid')
@@ -124,38 +134,26 @@ def create_model(shape) :
     return model
 
 
-def model_fit(training_data, training_labels, model) :    
-    print("train data: ", training_data.shape)
-    print("train labels: ", training_labels.shape)
-
-    splitter = StratifiedShuffleSplit(n_splits=1, test_size=0.3)
-    for train_index, validation_index in splitter.split(training_data, training_labels):
-        #print("TRAIN:", train_index, "TEST:", test_index)
-        x_validation, y_validation = training_data[validation_index], training_labels[validation_index]
-        x_train, y_train = training_data[train_index], training_labels[train_index]
-
-    print("TRAIN: ", x_train.shape, y_train.shape)
-    unique_elements, counts_elements = np.unique(y_train, return_counts=True)
-    print(np.asarray((unique_elements, counts_elements)))
-    print("VALIDATION: ", x_validation.shape, y_validation.shape)
-    unique_elements, counts_elements = np.unique(y_validation, return_counts=True)
-    print(np.asarray((unique_elements, counts_elements)))
-
+def model_fit(x_train, y_train, x_val, y_val, model) :    
+    """print("train data: ", training_data.shape)
+    print("train labels: ", training_labels.shape)"""
 
     history = model.fit(x_train, y_train, 
                         epochs = epochs, 
-                        validation_data = (x_validation, y_validation), 
+                        validation_data = (x_val, y_val), 
                         batch_size = batch_size,
-                        verbose=1)
+                        verbose=2)
     return history
 
 
 def run(path) :
-    x_train, y_train, x_test, y_test = load_data(path)
+    print("Load data")
+    x_train, y_train, x_val, y_val, x_test, y_test = load_data(path)
+
     history = []
     predictions = []
-    model = create_model(x_train.shape) #number of features
-    history = model_fit(x_train, y_train, model)
+    model = create_model(x_train.shape[1]) #number of features
+    history = model_fit(x_train, y_train, x_val, y_val, model)
     predictions = predict_labels(x_test, model)
     return (history, predictions, y_test)
 
@@ -168,8 +166,8 @@ def runExperiment(root):
     predictions = []
     y_test = []
     
-    #for i in range(1):
     for i in range(10):
+    #for i in range(10):
         path = root+'Round'+str(i+1)
         print(path)
         
@@ -190,7 +188,7 @@ def runExperiment(root):
 
 
 
-loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "binary/DatasetD2/rounds/")
+loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "tf-idf/binary/DatasetD1/")
 
 print(loss.shape)
 print(accuracy.shape)
@@ -199,8 +197,12 @@ print(val_accuracy.shape)
 print(predictions.shape)
 print(y_test.shape)
 
-plot_history(loss, accuracy, val_loss, val_accuracy, base_dir + "binary/DatasetD2/rounds/")
 
-plot_cm(predictions, y_test)
+plot_cm(predictions, y_test, base_dir + "tf-idf/binary/DatasetD1/")
+plot_history(loss, accuracy, val_loss, val_accuracy, base_dir + "tf-idf/binary/DatasetD1/")
 
-np.savetxt(base_dir + "binary/DatasetD2/rounds/Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
+
+
+np.savetxt(base_dir + "tf-idf/binary/DatasetD1/Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
+np.savetxt(base_dir + "tf-idf/binary/DatasetD1/Truth.csv", y_test.T.astype(int), delimiter=",", fmt="%i")
+
