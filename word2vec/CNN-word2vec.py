@@ -47,7 +47,7 @@ def plot_history(loss, accuracy, val_loss, val_accuracy, path) :
     plt.plot(x_plot, val_loss)
     plt.legend(['Training', 'Validation'])
 
-    plt.savefig(path + 'RNN-loss.png')
+    plt.savefig(path + 'CNN-loss.png')
 
     plt.figure()
     plt.xlabel('Epochs')
@@ -55,7 +55,7 @@ def plot_history(loss, accuracy, val_loss, val_accuracy, path) :
     plt.plot(x_plot, accuracy)
     plt.plot(x_plot, val_accuracy)
     plt.legend(['Training', 'Validation'], loc='lower right')
-    plt.savefig(path + 'RNN-accuracy.png')
+    plt.savefig(path + 'CNN-accuracy.png')
     plt.show()
 
     
@@ -81,7 +81,7 @@ def plot_cm(predictions, y_test, path) :
     ax.set_ylabel('True labels')
     ax.set_title('Confusion Matrix')
 
-    plt.savefig(path + 'RNN-cm.png')
+    plt.savefig(path + 'CNN-cm.png')
 
 
 # load training, validation and testing labels from CSV files
@@ -132,16 +132,65 @@ def load_sequences_and_matrix(path) :
 def create_model(train_sequences, emb_matrix) : 
     print(emb_matrix.shape[1])
 
-
-    input_ = layers.Input(shape = train_sequences[0,:].shape, )
+    """input_ = Input(shape = train_sequences[0,:].shape,)
     x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
-    #x = layers.Bidirectional(layers.LSTM(64))(x) # LSTM layer
-    x = layers.LSTM(64, dropout=0.5)(x)
-    x = layers.Dense(64, activation='relu')(x)
-    output = tf.keras.layers.Dense(1, activation='sigmoid')(x)
+    x = Conv1D(128, 3, activation='relu', kernel_regularizer=regularizers.l2(1e-4))(x)
+    x = MaxPooling1D(3)(x)
+    x = Conv1D(128, 3, activation='relu', kernel_regularizer=regularizers.l2(1e-4))(x)
+    x = MaxPooling1D(3)(x)
+    x = Conv1D(128, 3, activation='relu', kernel_regularizer=regularizers.l2(1e-4))(x)
+    x = GlobalMaxPooling1D()(x)
+    x = Flatten()(x)
+    x = Dense(64, activation='relu')(x)
+    #x = Dropout(0.5)(x)
+    output = Dense(1, activation='sigmoid')(x)
     model = models.Model(input_, output)
     opt = optimizers.Adam(learning_rate=0.005, beta_1=0.9)
-    model.compile(optimizer=opt, loss=tf.keras.losses.BinaryCrossentropy(), metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])"""
+
+
+    input_ = Input(shape = train_sequences[0,:].shape,)
+    x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
+    x = Conv1D(32, 8, activation='relu')(x)
+    x = MaxPooling1D(2)(x)
+    x = Conv1D(32, 8, activation='relu')(x)
+    x = MaxPooling1D(2)(x)
+    x = Conv1D(32, 8, activation='relu')(x)
+    x = GlobalMaxPooling1D()(x)
+    x = Flatten()(x)
+    x = Dense(16, activation='relu')(x)
+    output = Dense(1, activation='sigmoid')(x)
+    model = models.Model(input_, output)
+    opt = optimizers.Adam(learning_rate=0.001, beta_1=0.9)
+    model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
+
+
+    """input_ = Input(shape = train_sequences[0,:].shape,)
+    x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
+    x = Conv1D(256, 3, activation='relu')(x)
+    x = Conv1D(256, 3, activation='relu')(x)
+    x = Conv1D(256, 3, activation='relu')(x)
+    x = MaxPooling1D()(x)
+    x = Conv1D(128, 3, activation='relu')(x)
+    x = Conv1D(128, 3, activation='relu')(x)
+    x = Conv1D(128, 3, activation='relu')(x)
+    x = MaxPooling1D()(x)
+    x = Conv1D(64, 3, activation='relu')(x)
+    x = Conv1D(64, 3, activation='relu')(x)
+    x = Conv1D(64, 3, activation='relu')(x)
+    x = GlobalMaxPooling1D()(x)
+    x = Flatten()(x)
+    x = Dense(64, activation='relu')(x)
+    #x = Dropout(0.2)(x)
+    output = Dense(1, activation='sigmoid')(x)
+
+    model = Model(input_, output)
+
+    model.compile(
+        loss='binary_crossentropy',
+        optimizer='adam',
+        metrics=['accuracy']
+    )"""
     
     model.summary()
     
@@ -219,6 +268,6 @@ plot_history(loss, accuracy, val_loss, val_accuracy, base_dir + "word2vec/binary
 
 
 
-np.savetxt(base_dir + "word2vec/binary/DatasetD1/RNN-Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
-np.savetxt(base_dir + "word2vec/binary/DatasetD1/RNN-Truth.csv", y_test.T.astype(int), delimiter=",", fmt="%i")
+np.savetxt(base_dir + "word2vec/binary/DatasetD1/CNN-Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
+np.savetxt(base_dir + "word2vec/binary/DatasetD1/CNN-Truth.csv", y_test.T.astype(int), delimiter=",", fmt="%i")
 
