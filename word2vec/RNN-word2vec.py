@@ -135,7 +135,7 @@ def load_sequences_and_matrix(path) :
 def create_model(train_sequences, emb_matrix) : 
     print(emb_matrix.shape[1])
 
-    # first model: 8 epochs, 128 batch_size
+    # result-1: 8 epochs, 128 batch_size
     """input_ = layers.Input(shape = train_sequences[0,:].shape, )
     x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
     #x = layers.Bidirectional(layers.LSTM(64))(x) # LSTM layer
@@ -146,7 +146,7 @@ def create_model(train_sequences, emb_matrix) :
     opt = optimizers.Adam(learning_rate=0.01, beta_1=0.9)
     model.compile(optimizer=opt, loss=tf.keras.losses.BinaryCrossentropy(), metrics=['accuracy'])"""
 
-    # second model: 5 epochs, 64 batch_size
+    # result-2: 5 epochs, 64 batch_size
     input_ = layers.Input(shape = train_sequences[0,:].shape, )
     x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
     #x = layers.Bidirectional(layers.LSTM(64))(x) # LSTM layer
@@ -235,6 +235,10 @@ plot_history(loss, accuracy, val_loss, val_accuracy, base_dir + "word2vec/RNN-re
 
 np.savetxt(base_dir + "word2vec/RNN-results/RNN-Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
 np.savetxt(base_dir + "word2vec/RNN-results/RNN-Truth.csv", y_test.T.astype(int), delimiter=",", fmt="%i")
+np.savetxt(base_dir + "word2vec/RNN-results/RNN-Loss.csv", loss.T, delimiter=",")
+np.savetxt(base_dir + "word2vec/RNN-results/RNN-Val_Loss.csv", val_loss.T, delimiter=",")
+np.savetxt(base_dir + "word2vec/RNN-results/RNN-Acc.csv", accuracy.T, delimiter=",")
+np.savetxt(base_dir + "word2vec/RNN-results/RNN-Val_Acc.csv", val_accuracy.T, delimiter=",")
 
 print("Total time: ", (time.time() - start_time))
 
