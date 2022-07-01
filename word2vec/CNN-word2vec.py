@@ -14,6 +14,7 @@ from keras_tqdm import TQDMNotebookCallback
 from keras import regularizers
 from torch import dropout
 import os
+import time
 from tensorflow.keras import models, layers, optimizers
 
 
@@ -26,6 +27,8 @@ config = tf.compat.v1.ConfigProto(
         device_count = {'GPU': 0}
     )
 sess = tf.compat.v1.Session(config=config) """
+
+start_time = time.time()
 
 base_dir = ''
 epochs = 5
@@ -132,6 +135,40 @@ def load_sequences_and_matrix(path) :
 def create_model(train_sequences, emb_matrix) : 
     print(emb_matrix.shape[1])
 
+    # first model: 5 epochs, 64 batch_size
+    input_ = Input(shape = train_sequences[0,:].shape,)
+    x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
+    x = Conv1D(32, 8, activation='relu')(x)
+    x = MaxPooling1D(2)(x)
+    """x = Conv1D(128, 3, activation='relu')(x)
+    x = MaxPooling1D(3)(x)
+    x = Conv1D(128, 3, activation='relu')(x)
+    x = GlobalMaxPooling1D()(x)"""
+    x = Flatten()(x)
+    x = Dense(10, activation='relu')(x)
+    #x = Dropout(0.5)(x)
+    output = Dense(1, activation='sigmoid')(x)
+    model = models.Model(input_, output)
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+    # second model: 5 epochs, 64 batch_size
+    """input_ = Input(shape = train_sequences[0,:].shape,)
+    x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
+    x = Conv1D(128, 3, activation='relu')(x)
+    x = MaxPooling1D(3)(x)
+    x = Conv1D(128, 3, activation='relu')(x)
+    x = MaxPooling1D(3)(x)
+    x = Conv1D(128, 3, activation='relu')(x)
+    x = GlobalMaxPooling1D()(x)
+    x = Flatten()(x)
+    x = Dense(64, activation='relu')(x)
+    #x = Dropout(0.5)(x)
+    output = Dense(1, activation='sigmoid')(x)
+    model = models.Model(input_, output)
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])"""
+
+
+    # third model: 5 epochs, 64 batch_size
     """input_ = Input(shape = train_sequences[0,:].shape,)
     x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
     x = Conv1D(128, 3, activation='relu', kernel_regularizer=regularizers.l2(1e-4))(x)
@@ -148,50 +185,20 @@ def create_model(train_sequences, emb_matrix) :
     opt = optimizers.Adam(learning_rate=0.005, beta_1=0.9)
     model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])"""
 
-
-    input_ = Input(shape = train_sequences[0,:].shape,)
-    x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
-    x = Conv1D(32, 8, activation='relu')(x)
-    x = MaxPooling1D(2)(x)
-    x = Conv1D(32, 8, activation='relu')(x)
-    x = MaxPooling1D(2)(x)
-    x = Conv1D(32, 8, activation='relu')(x)
-    x = GlobalMaxPooling1D()(x)
-    x = Flatten()(x)
-    x = Dense(16, activation='relu')(x)
-    output = Dense(1, activation='sigmoid')(x)
-    model = models.Model(input_, output)
-    opt = optimizers.Adam(learning_rate=0.001, beta_1=0.9)
-    model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
-
-
+    
+    # fourth model: 5 epochs, 64 batch_size
     """input_ = Input(shape = train_sequences[0,:].shape,)
     x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
-    x = Conv1D(256, 3, activation='relu')(x)
-    x = Conv1D(256, 3, activation='relu')(x)
-    x = Conv1D(256, 3, activation='relu')(x)
-    x = MaxPooling1D()(x)
-    x = Conv1D(128, 3, activation='relu')(x)
-    x = Conv1D(128, 3, activation='relu')(x)
-    x = Conv1D(128, 3, activation='relu')(x)
-    x = MaxPooling1D()(x)
-    x = Conv1D(64, 3, activation='relu')(x)
-    x = Conv1D(64, 3, activation='relu')(x)
-    x = Conv1D(64, 3, activation='relu')(x)
-    x = GlobalMaxPooling1D()(x)
+    x = Conv1D(32, 8, activation='relu')(x)
+    x = MaxPooling1D(2)(x)
     x = Flatten()(x)
-    x = Dense(64, activation='relu')(x)
-    #x = Dropout(0.2)(x)
+    x = Dense(10, activation='relu')(x)
     output = Dense(1, activation='sigmoid')(x)
+    model = models.Model(input_, output)
+    opt = optimizers.Adam(learning_rate=0.005, beta_1=0.9)
+    model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])"""
 
-    model = Model(input_, output)
 
-    model.compile(
-        loss='binary_crossentropy',
-        optimizer='adam',
-        metrics=['accuracy']
-    )"""
-    
     model.summary()
     
     return model
@@ -247,6 +254,7 @@ def runExperiment(root):
         predictions = np.append(predictions, round_predictions)
         y_test = np.append(y_test, round_y_test)
         
+        print("Seconds: ", (time.time() - start_time))
         print("\n")
         
     return (loss, accuracy, val_loss, val_accuracy, predictions, y_test)
@@ -263,11 +271,13 @@ print(predictions.shape)
 print(y_test.shape)
 
 
-plot_cm(predictions, y_test, base_dir + "word2vec/binary/DatasetD1/")
-plot_history(loss, accuracy, val_loss, val_accuracy, base_dir + "word2vec/binary/DatasetD1/")
+plot_cm(predictions, y_test, base_dir + "word2vec/CNN-results/")
+plot_history(loss, accuracy, val_loss, val_accuracy, base_dir + "word2vec/CNN-results/")
 
 
 
-np.savetxt(base_dir + "word2vec/binary/DatasetD1/CNN-Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
-np.savetxt(base_dir + "word2vec/binary/DatasetD1/CNN-Truth.csv", y_test.T.astype(int), delimiter=",", fmt="%i")
+np.savetxt(base_dir + "word2vec/CNN-results/CNN-Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
+np.savetxt(base_dir + "word2vec/CNN-results/CNN-Truth.csv", y_test.T.astype(int), delimiter=",", fmt="%i")
+
+print("Total time: ", (time.time() - start_time))
 

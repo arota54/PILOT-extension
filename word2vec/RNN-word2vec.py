@@ -14,6 +14,7 @@ from keras_tqdm import TQDMNotebookCallback
 from keras import regularizers
 from torch import dropout
 import os
+import time
 from tensorflow.keras import models, layers, optimizers
 
 
@@ -26,6 +27,8 @@ config = tf.compat.v1.ConfigProto(
         device_count = {'GPU': 0}
     )
 sess = tf.compat.v1.Session(config=config) """
+
+start_time = time.time()
 
 base_dir = ''
 epochs = 5
@@ -132,7 +135,18 @@ def load_sequences_and_matrix(path) :
 def create_model(train_sequences, emb_matrix) : 
     print(emb_matrix.shape[1])
 
+    # first model
+    """input_ = layers.Input(shape = train_sequences[0,:].shape, )
+    x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
+    #x = layers.Bidirectional(layers.LSTM(64))(x) # LSTM layer
+    x = layers.LSTM(64, dropout=0.5)(x)
+    x = layers.Dense(64, activation='relu')(x)
+    output = tf.keras.layers.Dense(1, activation='sigmoid')(x)
+    model = models.Model(input_, output)
+    opt = optimizers.Adam(learning_rate=0.01, beta_1=0.9)
+    model.compile(optimizer=opt, loss=tf.keras.losses.BinaryCrossentropy(), metrics=['accuracy'])"""
 
+    # second model
     input_ = layers.Input(shape = train_sequences[0,:].shape, )
     x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
     #x = layers.Bidirectional(layers.LSTM(64))(x) # LSTM layer
@@ -183,7 +197,6 @@ def runExperiment(root):
     y_test = []
     
     for i in range(10):
-    #for i in range(10):
         path = root+'Round'+str(i+1)
         print(path)
         
@@ -198,6 +211,7 @@ def runExperiment(root):
         predictions = np.append(predictions, round_predictions)
         y_test = np.append(y_test, round_y_test)
         
+        print("Seconds: ", (time.time() - start_time))
         print("\n")
         
     return (loss, accuracy, val_loss, val_accuracy, predictions, y_test)
@@ -214,11 +228,13 @@ print(predictions.shape)
 print(y_test.shape)
 
 
-plot_cm(predictions, y_test, base_dir + "word2vec/binary/DatasetD1/")
-plot_history(loss, accuracy, val_loss, val_accuracy, base_dir + "word2vec/binary/DatasetD1/")
+plot_cm(predictions, y_test, base_dir + "word2vec/RNN-results/")
+plot_history(loss, accuracy, val_loss, val_accuracy, base_dir + "word2vec/RNN-results/")
 
 
 
-np.savetxt(base_dir + "word2vec/binary/DatasetD1/RNN-Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
-np.savetxt(base_dir + "word2vec/binary/DatasetD1/RNN-Truth.csv", y_test.T.astype(int), delimiter=",", fmt="%i")
+np.savetxt(base_dir + "word2vec/RNN-results/RNN-Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
+np.savetxt(base_dir + "word2vec/RNN-results/RNN-Truth.csv", y_test.T.astype(int), delimiter=",", fmt="%i")
+
+print("Total time: ", (time.time() - start_time))
 
