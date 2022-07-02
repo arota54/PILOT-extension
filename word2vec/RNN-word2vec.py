@@ -136,7 +136,7 @@ def create_model(train_sequences, emb_matrix) :
     print(emb_matrix.shape[1])
 
     # result-1: 8 epochs, 128 batch_size
-    """input_ = layers.Input(shape = train_sequences[0,:].shape, )
+    """ input_ = layers.Input(shape = train_sequences[0,:].shape, )
     x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
     #x = layers.Bidirectional(layers.LSTM(64))(x) # LSTM layer
     x = layers.LSTM(64, dropout=0.5)(x)
@@ -235,10 +235,10 @@ plot_history(loss, accuracy, val_loss, val_accuracy, base_dir + "word2vec/RNN-re
 
 np.savetxt(base_dir + "word2vec/RNN-results/RNN-Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
 np.savetxt(base_dir + "word2vec/RNN-results/RNN-Truth.csv", y_test.T.astype(int), delimiter=",", fmt="%i")
-np.savetxt(base_dir + "word2vec/RNN-results/RNN-Loss.csv", loss.T, delimiter=",")
-np.savetxt(base_dir + "word2vec/RNN-results/RNN-Val_Loss.csv", val_loss.T, delimiter=",")
-np.savetxt(base_dir + "word2vec/RNN-results/RNN-Acc.csv", accuracy.T, delimiter=",")
-np.savetxt(base_dir + "word2vec/RNN-results/RNN-Val_Acc.csv", val_accuracy.T, delimiter=",")
+np.savetxt(base_dir + "word2vec/RNN-results/RNN-Loss.csv", loss.T.astype(float), delimiter=",", fmt="%f")
+np.savetxt(base_dir + "word2vec/RNN-results/RNN-Val_Loss.csv", val_loss.T.astype(float), delimiter=",", fmt="%f")
+np.savetxt(base_dir + "word2vec/RNN-results/RNN-Acc.csv", accuracy.T.astype(float), delimiter=",", fmt="%f")
+np.savetxt(base_dir + "word2vec/RNN-results/RNN-Val_Acc.csv", val_accuracy.T.astype(float), delimiter=",", fmt="%f")
 
 print("Total time: ", (time.time() - start_time))
 

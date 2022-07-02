@@ -136,22 +136,22 @@ def create_model(train_sequences, emb_matrix) :
     print(emb_matrix.shape[1])
 
     # result-3: 5 epochs, 64 batch_size
-    """input_ = Input(shape = train_sequences[0,:].shape,)
+    input_ = Input(shape = train_sequences[0,:].shape,)
     x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
     x = Conv1D(32, 8, activation='relu')(x)
     x = MaxPooling1D(2)(x)
-    """
+    
     """x = Conv1D(128, 3, activation='relu')(x)
     x = MaxPooling1D(3)(x)
     x = Conv1D(128, 3, activation='relu')(x)
     x = GlobalMaxPooling1D()(x)"""
-    """
+    
     x = Flatten()(x)
     x = Dense(10, activation='relu')(x)
     #x = Dropout(0.5)(x)
     output = Dense(1, activation='sigmoid')(x)
     model = models.Model(input_, output)
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])"""
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     # result-4: 5 epochs, 64 batch_size
     """input_ = Input(shape = train_sequences[0,:].shape,)
@@ -171,7 +171,7 @@ def create_model(train_sequences, emb_matrix) :
 
 
     # result-5: 5 epochs, 64 batch_size
-    input_ = Input(shape = train_sequences[0,:].shape,)
+    """input_ = Input(shape = train_sequences[0,:].shape,)
     x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
     x = Conv1D(128, 3, activation='relu', kernel_regularizer=regularizers.l2(1e-4))(x)
     x = MaxPooling1D(3)(x)
@@ -185,7 +185,7 @@ def create_model(train_sequences, emb_matrix) :
     output = Dense(1, activation='sigmoid')(x)
     model = models.Model(input_, output)
     opt = optimizers.Adam(learning_rate=0.005, beta_1=0.9)
-    model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])"""
 
     
     # result-6: 5 epochs, 64 batch_size
@@ -280,10 +280,10 @@ plot_history(loss, accuracy, val_loss, val_accuracy, base_dir + "word2vec/CNN-re
 
 np.savetxt(base_dir + "word2vec/CNN-results/CNN-Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
 np.savetxt(base_dir + "word2vec/CNN-results/CNN-Truth.csv", y_test.T.astype(int), delimiter=",", fmt="%i")
-np.savetxt(base_dir + "word2vec/CNN-results/CNN-Loss.csv", loss.T, delimiter=",")
-np.savetxt(base_dir + "word2vec/CNN-results/CNN-Val_Loss.csv", val_loss.T, delimiter=",")
-np.savetxt(base_dir + "word2vec/CNN-results/CNN-Acc.csv", accuracy.T, delimiter=",")
-np.savetxt(base_dir + "word2vec/CNN-results/CNN-Val_Acc.csv", val_accuracy.T, delimiter=",")
+np.savetxt(base_dir + "word2vec/CNN-results/CNN-Loss.csv", loss.T.astype(float), delimiter=",", fmt="%f")
+np.savetxt(base_dir + "word2vec/CNN-results/CNN-Val_Loss.csv", val_loss.T.astype(float), delimiter=",", fmt="%f")
+np.savetxt(base_dir + "word2vec/CNN-results/CNN-Acc.csv", accuracy.T.astype(float), delimiter=",", fmt="%f")
+np.savetxt(base_dir + "word2vec/CNN-results/CNN-Val_Acc.csv", val_accuracy.T.astype(float), delimiter=",", fmt="%f")
 
 print("Total time: ", (time.time() - start_time))
 
