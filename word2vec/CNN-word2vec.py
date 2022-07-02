@@ -16,7 +16,7 @@ from torch import dropout
 import os
 import time
 from tensorflow.keras import models, layers, optimizers
-
+from keras.utils.vis_utils import plot_model
 
 from keras.layers import Dense, Input, GlobalMaxPooling1D, MaxPool1D, GlobalMaxPool1D
 from keras.layers import Conv1D, MaxPooling1D, Embedding, Flatten, Dropout
@@ -202,6 +202,8 @@ def create_model(train_sequences, emb_matrix) :
 
 
     model.summary()
+
+    plot_model(model, to_file=base_dir + 'word2vec/CNN-results/CNN-model.png', show_shapes=True, show_layer_names=True)
     
     return model
 

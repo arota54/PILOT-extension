@@ -16,6 +16,7 @@ from torch import dropout
 import os
 import time
 from tensorflow.keras import models, layers, optimizers
+from keras.utils.vis_utils import plot_model
 
 
 from keras.layers import Dense, Input, GlobalMaxPooling1D, MaxPool1D, GlobalMaxPool1D
@@ -158,6 +159,8 @@ def create_model(train_sequences, emb_matrix) :
     model.compile(optimizer=opt, loss=tf.keras.losses.BinaryCrossentropy(), metrics=['accuracy'])
     
     model.summary()
+
+    plot_model(model, to_file=base_dir + 'word2vec/RNN-results/RNN-model.png', show_shapes=True, show_layer_names=True)
     
     return model
 
