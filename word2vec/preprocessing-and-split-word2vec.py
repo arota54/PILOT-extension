@@ -13,6 +13,7 @@ import gensim.downloader as api
 import os, shutil
 from sklearn.model_selection import KFold
 from sklearn.model_selection import StratifiedShuffleSplit
+from gensim import models
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -20,20 +21,26 @@ nltk.download('wordnet')
 nltk.download('omw-1.4')
 stop_words = set(stopwords.words('english'))
 
-w2v = api.load("word2vec-google-news-300")
+#w2v = api.load("word2vec-google-news-300")
 
 # utilizzo di una GPU su scheda grafica locale
-sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
+"""sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
 physical_devices = tf.config.list_physical_devices("GPU")
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
+tf.config.experimental.set_memory_growth(physical_devices[0], True)"""
 
 base_dir = ''
+
+w2v_path = base_dir + "word2vec/model/"
 
 maldonado_input_file = base_dir + 'datasets/maldonado-dataset.csv'
 maldonado_output_file_binary = base_dir + 'word2vec/binary/DatasetD1/df-maldonado-binary.csv'
 maldonado_output_file_multiclass = base_dir + 'word2vec/multiclass/DatasetD1/df-maldonado-multiclass.csv'
 maldonado_output_folder_multiclass = base_dir + 'word2vec/multiclass/DatasetD1/'
 maldonado_output_folder_binary = base_dir + 'word2vec/binary/DatasetD1/'
+
+zhao_input_file = base_dir + 'datasets/zhao-dataset.csv'
+zhao_output_file_binary = base_dir + 'word2vec/binary/DatasetZhao/df-zhao-binary.csv'
+zhao_output_folder_binary = base_dir + 'word2vec/binary/DatasetZhao/'
 
 debthunter_input_file = base_dir + 'datasets/debthunter-dataset.csv'
 debthunter_output_file_binary = base_dir + 'word2vec/binary/DatasetD2/df-debthunter-binary.csv'
@@ -84,15 +91,15 @@ def read_comments_and_labels():
     projects_name = []
     classifications = []
 
-
-    with open(INPUT_FILE) as csv_file:
+    print("Read comments and labels")
+    with open(INPUT_FILE, encoding="utf8") as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         #Skip header
         next(csv_reader)
         for row in csv_reader:
             
             if BINARY_CLASSIFICATION or row[1] != 'WITHOUT_CLASSIFICATION':
-                if DATASET:
+                if DATASET == 1 or DATASET == 3:
                     comments.append(standardize(row[2]))
                     projects_name.append(row[0])
                     classifications.append(row[1])
@@ -170,6 +177,9 @@ def word2vec(x_train, x_validation, x_test, output_folder):
     print(train_sequences.shape, validation_sequences.shape, test_sequences.shape)
     #print(x_train)
 
+    w2v = models.KeyedVectors.load_word2vec_format(w2v_path + 
+    'GoogleNews-vectors-negative300.bin.gz', binary=True)
+
     # Build weights of the embbeddings matrix using w2v
     emb_matrix=np.zeros((max_words+1, 300))
     for i in range(max_words):
@@ -192,18 +202,22 @@ def main(binary_classification, dataset) :
     BINARY_CLASSIFICATION = binary_classification
     DATASET = dataset
 
-    if DATASET:
+    if DATASET == 1:
         INPUT_FILE = maldonado_input_file
         OUTPUT_FILE_BINARY = maldonado_output_file_binary
         OUTPUT_FILE_MULTICLASS = maldonado_output_file_multiclass
         OUTPUT_FOLDER_BINARY = maldonado_output_folder_binary
         OUTPUT_FOLDER_MULTICLASS = maldonado_output_folder_multiclass
-    else:
+    elif DATASET == 2:
         INPUT_FILE = debthunter_input_file
         OUTPUT_FILE_BINARY = debthunter_output_file_binary
         OUTPUT_FILE_MULTICLASS = debthunter_output_file_multiclass
         OUTPUT_FOLDER_BINARY = debthunter_output_folder_binary
         OUTPUT_FOLDER_MULTICLASS = debthunter_output_folder_multiclass
+    elif DATASET == 3:
+        INPUT_FILE = zhao_input_file
+        OUTPUT_FILE_BINARY = zhao_output_file_binary
+        OUTPUT_FOLDER_BINARY = zhao_output_folder_binary
 
     if BINARY_CLASSIFICATION:
         output_folder = OUTPUT_FOLDER_BINARY
@@ -287,6 +301,7 @@ def main(binary_classification, dataset) :
 
 # BINARY_CLASSIFICATION = True prende l'intero dataset (WITHOUT_CLASSIFICATION + tutte le altre etichette)
 # BINARY_CLASSIFICATION = False prende solo le altre etichette (non prende WITHOUT_CLASSIFICATION)
-# DATASET = True (Maldonado), DATASET = False (DebtHunter)
+# DATASET = 1 (Maldonado), DATASET = 2 (DebtHunter), DATASET = 3 (Zhao)
 #main(True, False) # DebtHunter binary
-main(True, True) # Maldonado binary
+#main(True, True) # Maldonado binary
+main(True, 3) # Zhao binary
