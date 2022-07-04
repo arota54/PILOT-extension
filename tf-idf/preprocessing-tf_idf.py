@@ -21,9 +21,9 @@ nltk.download('omw-1.4')
 stop_words = set(stopwords.words('english'))
 
 # utilizzo di una GPU su scheda grafica locale
-sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
+"""sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
 physical_devices = tf.config.list_physical_devices("GPU")
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
+tf.config.experimental.set_memory_growth(physical_devices[0], True)"""
 
 """parser = argparse.ArgumentParser()
 parser.add_argument('input_file', help='File .csv containing the dataset')
@@ -36,6 +36,8 @@ maldonado_input_file = base_dir + 'datasets/maldonado-dataset.csv'
 maldonado_features_matrices_binary = base_dir + 'tf-idf/features-matrices/features-matrices-maldonado-binary.csv'
 maldonado_features_matrices_multiclass = base_dir + 'tf-idf/features-matrices/features-matrices-maldonado-multiclass.csv'
 
+zhao_input_file = base_dir + 'datasets/zhao-dataset.csv'
+zhao_features_matrices_binary = base_dir + 'tf-idf/features-matrices/features-matrices-zhao-binary.csv'
 
 debthunter_input_file = base_dir + 'datasets/debthunter-dataset.csv'
 debthunter_features_matrices_binary = base_dir + 'tf-idf/features-matrices/features-matrices-debthunter-binary.csv'
@@ -71,14 +73,14 @@ def read_comments_and_labels():
     classifications = []
 
 
-    with open(INPUT_FILE) as csv_file:
+    with open(INPUT_FILE, encoding="utf8") as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         #Skip header
         next(csv_reader)
         for row in csv_reader:
             
             if BINARY_CLASSIFICATION or row[1] != 'WITHOUT_CLASSIFICATION':
-                if DATASET:
+                if DATASET == 1 or DATASET == 3:
                     comments.append(standardize(row[2]))
                     projects_name.append(row[0])
                     classifications.append(row[1])
@@ -131,6 +133,8 @@ def tf_idf(comments, classifications):
     vect = TfidfVectorizer()
     vects = vect.fit_transform(comments)
 
+    print(vects.shape)
+
     # Select all rows from the data set
     td = pd.DataFrame(vects.todense()).iloc[:]
 
@@ -160,14 +164,17 @@ def main(binary_classification, dataset) :
     BINARY_CLASSIFICATION = binary_classification
     DATASET = dataset
 
-    if DATASET:
+    if DATASET == 1:
         INPUT_FILE = maldonado_input_file
         OUTPUT_FILE_BINARY = maldonado_features_matrices_binary
         OUTPUT_FILE_MULTICLASS = maldonado_features_matrices_multiclass
-    else:
+    elif DATASET == 2:
         INPUT_FILE = debthunter_input_file
         OUTPUT_FILE_BINARY = debthunter_features_matrices_binary
         OUTPUT_FILE_MULTICLASS = debthunter_features_matrices_multiclass
+    elif DATASET == 3:
+        INPUT_FILE = zhao_input_file
+        OUTPUT_FILE_BINARY = zhao_features_matrices_binary
 
     print("Read comments and labels")
     comments, labels = read_comments_and_labels() 
@@ -178,7 +185,8 @@ def main(binary_classification, dataset) :
 
 # BINARY_CLASSIFICATION = True prende l'intero dataset (WITHOUT_CLASSIFICATION + tutte le altre etichette)
 # BINARY_CLASSIFICATION = False prende solo le altre etichette (non prende WITHOUT_CLASSIFICATION)
-# DATASET = True (Maldonado), DATASET = False (DebtHunter)
+# DATASET = 1 (Maldonado), DATASET = 2 (DebtHunter), DATASET = 2 (Zhao)
 #main(True, False) # DebtHunter binary
-#main(binary_classification=True, dataset=True) # Maldonado binary
-main(binary_classification=False, dataset=True) # Maldonado multiclass
+main(binary_classification=True, dataset=1) # Maldonado binary
+#main(binary_classification=False, dataset=1) # Maldonado multiclass
+#main(binary_classification=True, dataset=3) # Zhao binary
