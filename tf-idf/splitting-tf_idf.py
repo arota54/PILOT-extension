@@ -20,6 +20,9 @@ maldonado_features_matrices_multiclass = base_dir + 'tf-idf/features-matrices/fe
 maldonado_output_folder_multiclass = base_dir + 'tf-idf/multiclass/DatasetD1/'
 maldonado_output_folder_binary = base_dir + 'tf-idf/binary/DatasetD1/'
 
+zhao_features_matrices_binary = base_dir + 'tf-idf/features-matrices/features-matrices-zhao-binary.csv'
+zhao_output_folder_binary = base_dir + 'tf-idf/binary/DatasetZhao/'
+
 debthunter_features_matrices_binary = base_dir + 'tf-idf/features-matrices/features-matrices-debthunter-binary.csv'
 debthunter_features_matrices_multiclass = base_dir + 'tf-idf/features-matrices/features-matrices-debthunter-multiclass.csv'
 debthunter_output_folder_multiclass = base_dir + 'tf-idf/multiclass/DatasetD2/'
@@ -65,20 +68,23 @@ def main(binary_classification, dataset) :
     BINARY_CLASSIFICATION = binary_classification
     DATASET = dataset
 
-    if DATASET:
+    if DATASET == 1:
         if BINARY_CLASSIFICATION:
             INPUT_FILE = maldonado_features_matrices_binary
             OUTPUT_FOLDER = maldonado_output_folder_binary #'tf-idf/binary/DatasetD1/'
         else:
             INPUT_FILE = maldonado_features_matrices_multiclass
             OUTPUT_FOLDER = maldonado_output_folder_multiclass #'tf-idf/multiclass/DatasetD1/'
-    else:
+    elif DATASET == 2:
         if BINARY_CLASSIFICATION:
             INPUT_FILE = debthunter_features_matrices_binary
             OUTPUT_FOLDER = debthunter_output_folder_binary #'tf-idf/binary/DatasetD2/'
         else:
             INPUT_FILE = debthunter_features_matrices_multiclass
             OUTPUT_FOLDER = debthunter_output_folder_multiclass #'tf-idf/multiclass/DatasetD2/'
+    elif DATASET == 3:
+        INPUT_FILE = zhao_features_matrices_binary
+        OUTPUT_FOLDER = zhao_output_folder_binary #'tf-idf/binary/DatasetZhao/'
 
     delete_folder(OUTPUT_FOLDER)
 
@@ -180,4 +186,5 @@ def main(binary_classification, dataset) :
 # BINARY_CLASSIFICATION = False prende solo le altre etichette (non prende WITHOUT_CLASSIFICATION)
 # DATASET = True (Maldonado), DATASET = False (DebtHunter)
 #main(True, False) # DebtHunter binary
-main(True, True) # Maldonado binary
+#main(True, True) # Maldonado binary
+main(True, 3)
