@@ -183,11 +183,13 @@ def word2vec(x_train, x_validation, x_test, output_folder, tokenizer, matrix):
 
 def word2vec_tokenizer_matrix(comments):
     print("Start word2vec")
-    max_words = 7000
+    max_words = 5097
     tokenizer = kprocessing.text.Tokenizer(lower=True, split=' ', num_words=max_words, oov_token="<pad>", filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
     tokenizer.fit_on_texts(comments)
     voc = tokenizer.word_index
     reverse_voc = dict([(value, key) for (key, value) in voc.items()])
+
+    #print(reverse_voc)
 
     w2v = models.KeyedVectors.load_word2vec_format(w2v_path + 
     'GoogleNews-vectors-negative300.bin.gz', binary=True)
@@ -250,6 +252,9 @@ def main(binary_classification, dataset) :
     print(kf)
 
     x, y = np.array(df_comments), np.array(df_labels)
+    print("WHOLE: ", x.shape, y.shape)
+    unique_elements, counts_elements = np.unique(y, return_counts=True)
+    print(np.asarray((unique_elements, counts_elements)))
 
     tokenizer, matrix = word2vec_tokenizer_matrix(df_comments)
 
@@ -287,10 +292,10 @@ def main(binary_classification, dataset) :
             val = (0 in y_test.to_numpy() and 1 in y_test.to_numpy())
             assert val == True
         else :
-            val = (0 in y_train and 1 in y_train and 2 in y_train and 3 in y_train and 4 in y_train)
+            """val = (0 in y_train and 1 in y_train and 2 in y_train and 3 in y_train and 4 in y_train)
             assert val == True
             val = (0 in y_test and 1 in y_test and 2 in y_test and 3 in y_test and 4 in y_test)
-            assert val == True
+            assert val == True"""
         
         
         path = output_folder + 'Round' + str(set_number)
@@ -316,4 +321,5 @@ def main(binary_classification, dataset) :
 # DATASET = 1 (Maldonado), DATASET = 2 (DebtHunter), DATASET = 3 (Zhao)
 #main(True, False) # DebtHunter binary
 #main(True, 1) # Maldonado binary
-main(True, 3) # Zhao binary
+#main(True, 3) # Zhao binary
+main(False, 1)
