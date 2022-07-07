@@ -9,9 +9,9 @@ from sklearn.model_selection import StratifiedShuffleSplit
 import collections
 
 # utilizzo di una GPU su scheda grafica locale
-sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
+"""sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
 physical_devices = tf.config.list_physical_devices("GPU")
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
+tf.config.experimental.set_memory_growth(physical_devices[0], True)"""
 
 base_dir = ''
 
@@ -19,6 +19,9 @@ maldonado_features_matrices_binary = base_dir + 'tf-idf/features-matrices/featur
 maldonado_features_matrices_multiclass = base_dir + 'tf-idf/features-matrices/features-matrices-maldonado-multiclass.csv'
 maldonado_output_folder_multiclass = base_dir + 'tf-idf/multiclass/DatasetD1/'
 maldonado_output_folder_binary = base_dir + 'tf-idf/binary/DatasetD1/'
+
+zhao_features_matrices_binary = base_dir + 'tf-idf/features-matrices/features-matrices-zhao-binary.csv'
+zhao_output_folder_binary = base_dir + 'tf-idf/binary/DatasetZhao/'
 
 debthunter_features_matrices_binary = base_dir + 'tf-idf/features-matrices/features-matrices-debthunter-binary.csv'
 debthunter_features_matrices_multiclass = base_dir + 'tf-idf/features-matrices/features-matrices-debthunter-multiclass.csv'
@@ -65,20 +68,23 @@ def main(binary_classification, dataset) :
     BINARY_CLASSIFICATION = binary_classification
     DATASET = dataset
 
-    if DATASET:
+    if DATASET == 1:
         if BINARY_CLASSIFICATION:
             INPUT_FILE = maldonado_features_matrices_binary
             OUTPUT_FOLDER = maldonado_output_folder_binary #'tf-idf/binary/DatasetD1/'
         else:
             INPUT_FILE = maldonado_features_matrices_multiclass
             OUTPUT_FOLDER = maldonado_output_folder_multiclass #'tf-idf/multiclass/DatasetD1/'
-    else:
+    elif DATASET == 2:
         if BINARY_CLASSIFICATION:
             INPUT_FILE = debthunter_features_matrices_binary
             OUTPUT_FOLDER = debthunter_output_folder_binary #'tf-idf/binary/DatasetD2/'
         else:
             INPUT_FILE = debthunter_features_matrices_multiclass
             OUTPUT_FOLDER = debthunter_output_folder_multiclass #'tf-idf/multiclass/DatasetD2/'
+    elif DATASET == 3:
+        INPUT_FILE = zhao_features_matrices_binary
+        OUTPUT_FOLDER = zhao_output_folder_binary #'tf-idf/binary/DatasetD2/'
 
     delete_folder(OUTPUT_FOLDER)
 
@@ -178,6 +184,7 @@ def main(binary_classification, dataset) :
 
 # BINARY_CLASSIFICATION = True prende l'intero dataset (WITHOUT_CLASSIFICATION + tutte le altre etichette)
 # BINARY_CLASSIFICATION = False prende solo le altre etichette (non prende WITHOUT_CLASSIFICATION)
-# DATASET = True (Maldonado), DATASET = False (DebtHunter)
+# DATASET = 1 (Maldonado), DATASET = 2 (DebtHunter), DATASET = 2 (Zhao)
 #main(True, False) # DebtHunter binary
-main(True, True) # Maldonado binary
+#main(binary_classification=True, dataset=1) # Maldonado binary
+main(binary_classification=True, dataset=3) # Zhao binary
