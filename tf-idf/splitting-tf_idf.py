@@ -84,7 +84,7 @@ def main(binary_classification, dataset) :
             OUTPUT_FOLDER = debthunter_output_folder_multiclass #'tf-idf/multiclass/DatasetD2/'
     elif DATASET == 3:
         INPUT_FILE = zhao_features_matrices_binary
-        OUTPUT_FOLDER = zhao_output_folder_binary #'tf-idf/binary/DatasetD2/'
+        OUTPUT_FOLDER = zhao_output_folder_binary #'tf-idf/binary/DatasetZhao/'
 
     delete_folder(OUTPUT_FOLDER)
 
@@ -188,3 +188,4 @@ def main(binary_classification, dataset) :
 #main(True, False) # DebtHunter binary
 #main(binary_classification=True, dataset=1) # Maldonado binary
 main(binary_classification=True, dataset=3) # Zhao binary
+#main(True, True) # Maldonado binary

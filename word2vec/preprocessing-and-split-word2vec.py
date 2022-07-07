@@ -14,6 +14,7 @@ import os, shutil
 from sklearn.model_selection import KFold
 from sklearn.model_selection import StratifiedShuffleSplit
 from gensim import models
+import time
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -24,10 +25,11 @@ stop_words = set(stopwords.words('english'))
 #w2v = api.load("word2vec-google-news-300")
 
 # utilizzo di una GPU su scheda grafica locale
-"""sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
+sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
 physical_devices = tf.config.list_physical_devices("GPU")
-tf.config.experimental.set_memory_growth(physical_devices[0], True)"""
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
+start_time = time.time()
 base_dir = ''
 
 w2v_path = base_dir + "word2vec/model/"
@@ -92,7 +94,7 @@ def read_comments_and_labels():
     classifications = []
 
     print("Read comments and labels")
-    with open(INPUT_FILE, encoding="utf8") as csv_file:
+    with open(INPUT_FILE, encoding="utf-8") as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         #Skip header
         next(csv_reader)
@@ -162,13 +164,8 @@ def delete_folder(path) :
         #os.rmdir(path)
 
 
-def word2vec(x_train, x_validation, x_test, output_folder):
+def word2vec(x_train, x_validation, x_test, output_folder, tokenizer, matrix):
     print("Start word2vec")
-    max_words = 7000
-    tokenizer = kprocessing.text.Tokenizer(lower=True, split=' ', num_words=max_words, oov_token="<pad>", filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
-    tokenizer.fit_on_texts(x_train)
-    voc = tokenizer.word_index
-    reverse_voc = dict([(value, key) for (key, value) in voc.items()])
 
     train_sequences = kprocessing.sequence.pad_sequences(tokenizer.texts_to_sequences(x_train), maxlen=MAX_LEN)
     validation_sequences = kprocessing.sequence.pad_sequences(tokenizer.texts_to_sequences(x_validation), maxlen=MAX_LEN)
@@ -176,6 +173,21 @@ def word2vec(x_train, x_validation, x_test, output_folder):
 
     print(train_sequences.shape, validation_sequences.shape, test_sequences.shape)
     #print(x_train)
+
+    np.savetxt(output_folder + '/emb_matrix.csv', matrix, delimiter=",")
+    np.savetxt(output_folder + '/train_sequences.csv', train_sequences, delimiter=",")
+    np.savetxt(output_folder + '/validation_sequences.csv', validation_sequences, delimiter=",")
+    np.savetxt(output_folder + '/test_sequences.csv', test_sequences, delimiter=",")
+    print("End word2vec")
+
+
+def word2vec_tokenizer_matrix(comments):
+    print("Start word2vec")
+    max_words = 7000
+    tokenizer = kprocessing.text.Tokenizer(lower=True, split=' ', num_words=max_words, oov_token="<pad>", filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
+    tokenizer.fit_on_texts(comments)
+    voc = tokenizer.word_index
+    reverse_voc = dict([(value, key) for (key, value) in voc.items()])
 
     w2v = models.KeyedVectors.load_word2vec_format(w2v_path + 
     'GoogleNews-vectors-negative300.bin.gz', binary=True)
@@ -189,11 +201,8 @@ def word2vec(x_train, x_validation, x_test, output_folder):
     emb_size = emb_matrix.shape[1]
     print(emb_matrix.shape)
 
-    np.savetxt(output_folder + '/emb_matrix.csv', emb_matrix, delimiter=",")
-    np.savetxt(output_folder + '/train_sequences.csv', train_sequences, delimiter=",")
-    np.savetxt(output_folder + '/validation_sequences.csv', validation_sequences, delimiter=",")
-    np.savetxt(output_folder + '/test_sequences.csv', test_sequences, delimiter=",")
-    print("End word2vec")
+    #np.savetxt(output_folder + '/emb_matrix.csv', emb_matrix, delimiter=",")
+    return tokenizer, emb_matrix
 
 
 def main(binary_classification, dataset) :
@@ -242,7 +251,7 @@ def main(binary_classification, dataset) :
 
     x, y = np.array(df_comments), np.array(df_labels)
 
-    
+    tokenizer, matrix = word2vec_tokenizer_matrix(df_comments)
 
     for train_val_index, test_index in kf.split(df_comments, df_labels):
         print("\nSET: ", set_number)
@@ -286,22 +295,25 @@ def main(binary_classification, dataset) :
         
         path = output_folder + 'Round' + str(set_number)
         os.mkdir(path)   
-        word2vec(x_train, x_validation, x_test, path)
+        word2vec(x_train, x_validation, x_test, path, tokenizer, matrix)
+
+        print(x_train)
 
         # save train, validation and test as csv
-        np.savetxt(path + '/training_data.csv', x_train, delimiter=",", fmt="%s")
+        #np.savetxt(path + '/training_data.csv', x_train, delimiter=",", fmt="%s")
         np.savetxt(path + '/training_labels.csv', y_train.astype(int), delimiter=",", fmt="%i")
-        np.savetxt(path + '/validation_data.csv', x_validation, delimiter=",", fmt="%s")
+        #np.savetxt(path + '/validation_data.csv', x_validation, delimiter=",", fmt="%s")
         np.savetxt(path + '/validation_labels.csv', y_validation.astype(int), delimiter=",", fmt="%i")
-        np.savetxt(path + '/testing_data.csv', x_test, delimiter=",", fmt="%s")
+        #np.savetxt(path + '/testing_data.csv', x_test, delimiter=",", fmt="%s")
         np.savetxt(path + '/testing_labels.csv', y_test.astype(int), delimiter=",", fmt="%i")
 
-        set_number = set_number + 1 
+        set_number = set_number + 1
+        print("Seconds: ", (time.time() - start_time)) 
 
 
 # BINARY_CLASSIFICATION = True prende l'intero dataset (WITHOUT_CLASSIFICATION + tutte le altre etichette)
 # BINARY_CLASSIFICATION = False prende solo le altre etichette (non prende WITHOUT_CLASSIFICATION)
 # DATASET = 1 (Maldonado), DATASET = 2 (DebtHunter), DATASET = 3 (Zhao)
 #main(True, False) # DebtHunter binary
-#main(True, True) # Maldonado binary
+#main(True, 1) # Maldonado binary
 main(True, 3) # Zhao binary

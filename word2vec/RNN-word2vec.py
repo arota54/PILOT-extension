@@ -32,8 +32,8 @@ sess = tf.compat.v1.Session(config=config) """
 start_time = time.time()
 
 base_dir = ''
-epochs = 5
-batch_size = 64
+epochs = 8
+batch_size = 128
 
 # utilizzo di una GPU su scheda grafica locale
 sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
@@ -137,17 +137,6 @@ def create_model(train_sequences, emb_matrix) :
     print(emb_matrix.shape[1])
 
     # result-1: 8 epochs, 128 batch_size
-    """ input_ = layers.Input(shape = train_sequences[0,:].shape, )
-    x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
-    #x = layers.Bidirectional(layers.LSTM(64))(x) # LSTM layer
-    x = layers.LSTM(64, dropout=0.5)(x)
-    x = layers.Dense(64, activation='relu')(x)
-    output = tf.keras.layers.Dense(1, activation='sigmoid')(x)
-    model = models.Model(input_, output)
-    opt = optimizers.Adam(learning_rate=0.01, beta_1=0.9)
-    model.compile(optimizer=opt, loss=tf.keras.losses.BinaryCrossentropy(), metrics=['accuracy'])"""
-
-    # result-2: 5 epochs, 64 batch_size
     input_ = layers.Input(shape = train_sequences[0,:].shape, )
     x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
     #x = layers.Bidirectional(layers.LSTM(64))(x) # LSTM layer
@@ -155,8 +144,19 @@ def create_model(train_sequences, emb_matrix) :
     x = layers.Dense(64, activation='relu')(x)
     output = tf.keras.layers.Dense(1, activation='sigmoid')(x)
     model = models.Model(input_, output)
-    opt = optimizers.Adam(learning_rate=0.005, beta_1=0.9)
+    opt = optimizers.Adam(learning_rate=0.01, beta_1=0.9)
     model.compile(optimizer=opt, loss=tf.keras.losses.BinaryCrossentropy(), metrics=['accuracy'])
+
+    # result-2: 5 epochs, 64 batch_size
+    """input_ = layers.Input(shape = train_sequences[0,:].shape, )
+    x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
+    #x = layers.Bidirectional(layers.LSTM(64))(x) # LSTM layer
+    x = layers.LSTM(64, dropout=0.5)(x)
+    x = layers.Dense(64, activation='relu')(x)
+    output = tf.keras.layers.Dense(1, activation='sigmoid')(x)
+    model = models.Model(input_, output)
+    opt = optimizers.Adam(learning_rate=0.005, beta_1=0.9)
+    model.compile(optimizer=opt, loss=tf.keras.losses.BinaryCrossentropy(), metrics=['accuracy'])"""
     
     model.summary()
 
@@ -220,8 +220,8 @@ def runExperiment(root):
     return (loss, accuracy, val_loss, val_accuracy, predictions, y_test)
 
 
-
-loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/binary/DatasetD1/")
+#loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/binary/DatasetD1/")
+loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/binary/DatasetZhao/")
 
 print(loss.shape)
 print(accuracy.shape)
