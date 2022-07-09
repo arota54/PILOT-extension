@@ -183,7 +183,7 @@ def word2vec(x_train, x_validation, x_test, output_folder, tokenizer, matrix):
 
 def word2vec_tokenizer_matrix(comments):
     print("Start word2vec")
-    max_words = 5097
+    max_words = 7000
     tokenizer = kprocessing.text.Tokenizer(lower=True, split=' ', num_words=max_words, oov_token="<pad>", filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
     tokenizer.fit_on_texts(comments)
     voc = tokenizer.word_index
@@ -320,6 +320,6 @@ def main(binary_classification, dataset) :
 # BINARY_CLASSIFICATION = False prende solo le altre etichette (non prende WITHOUT_CLASSIFICATION)
 # DATASET = 1 (Maldonado), DATASET = 2 (DebtHunter), DATASET = 3 (Zhao)
 #main(True, False) # DebtHunter binary
-#main(True, 1) # Maldonado binary
+main(True, 1) # Maldonado binary
 #main(True, 3) # Zhao binary
-main(False, 1)
+#main(False, 1)

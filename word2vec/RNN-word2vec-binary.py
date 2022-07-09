@@ -32,8 +32,8 @@ sess = tf.compat.v1.Session(config=config) """
 start_time = time.time()
 
 base_dir = ''
-epochs = 5
-batch_size = 64
+epochs = 8
+batch_size = 128
 
 # utilizzo di una GPU su scheda grafica locale
 sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
@@ -220,8 +220,9 @@ def runExperiment(root):
     return (loss, accuracy, val_loss, val_accuracy, predictions, y_test)
 
 
-#loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/binary/DatasetD1/")
-loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/binary/DatasetZhao/")
+loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/binary/DatasetD1/")
+#loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/binary/DatasetZhao/")
+#loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "smote/word2vec/binary/DatasetD1/")
 
 print(loss.shape)
 print(accuracy.shape)
@@ -231,17 +232,17 @@ print(predictions.shape)
 print(y_test.shape)
 
 
-plot_cm(predictions, y_test, base_dir + "word2vec/RNN-results/")
-plot_history(loss, accuracy, val_loss, val_accuracy, base_dir + "word2vec/RNN-results/")
+plot_cm(predictions, y_test, base_dir + "word2vec/binary/RNN-results/")
+plot_history(loss, accuracy, val_loss, val_accuracy, base_dir + "word2vec/binary/RNN-results/")
 
 
 
-np.savetxt(base_dir + "word2vec/RNN-results/RNN-Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
-np.savetxt(base_dir + "word2vec/RNN-results/RNN-Truth.csv", y_test.T.astype(int), delimiter=",", fmt="%i")
-np.savetxt(base_dir + "word2vec/RNN-results/RNN-Loss.csv", loss.T.astype(float), delimiter=",", fmt="%f")
-np.savetxt(base_dir + "word2vec/RNN-results/RNN-Val_Loss.csv", val_loss.T.astype(float), delimiter=",", fmt="%f")
-np.savetxt(base_dir + "word2vec/RNN-results/RNN-Acc.csv", accuracy.T.astype(float), delimiter=",", fmt="%f")
-np.savetxt(base_dir + "word2vec/RNN-results/RNN-Val_Acc.csv", val_accuracy.T.astype(float), delimiter=",", fmt="%f")
+np.savetxt(base_dir + "word2vec/binary/RNN-results/RNN-Prediction.csv", predictions.T.astype(int), delimiter=",", fmt="%i")
+np.savetxt(base_dir + "word2vec/binary/RNN-results/RNN-Truth.csv", y_test.T.astype(int), delimiter=",", fmt="%i")
+np.savetxt(base_dir + "word2vec/binary/RNN-results/RNN-Loss.csv", loss.T.astype(float), delimiter=",", fmt="%f")
+np.savetxt(base_dir + "word2vec/binary/RNN-results/RNN-Val_Loss.csv", val_loss.T.astype(float), delimiter=",", fmt="%f")
+np.savetxt(base_dir + "word2vec/binary/RNN-results/RNN-Acc.csv", accuracy.T.astype(float), delimiter=",", fmt="%f")
+np.savetxt(base_dir + "word2vec/binary/RNN-results/RNN-Val_Acc.csv", val_accuracy.T.astype(float), delimiter=",", fmt="%f")
 
 print("Total time: ", (time.time() - start_time))
 
