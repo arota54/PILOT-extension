@@ -44,6 +44,10 @@ zhao_input_file = base_dir + 'datasets/zhao-dataset.csv'
 zhao_output_file_binary = base_dir + 'word2vec/binary/DatasetZhao/df-zhao-binary.csv'
 zhao_output_folder_binary = base_dir + 'word2vec/binary/DatasetZhao/'
 
+maldonadoplus_input_file = base_dir + 'datasets/maldonado-plus-dataset.csv'
+maldonadoplus_output_file_binary = base_dir + 'word2vec/binary/DatasetMaldonadoPlus/df-maldonadoplus-binary.csv'
+maldonadoplus_output_folder_binary = base_dir + 'word2vec/binary/DatasetMaldonadoPlus/'
+
 debthunter_input_file = base_dir + 'datasets/debthunter-dataset.csv'
 debthunter_output_file_binary = base_dir + 'word2vec/binary/DatasetD2/df-debthunter-binary.csv'
 debthunter_output_file_multiclass = base_dir + 'word2vec/multiclass/DatasetD2/df-debthunter-multiclass.csv'
@@ -101,7 +105,7 @@ def read_comments_and_labels():
         for row in csv_reader:
             
             if BINARY_CLASSIFICATION or row[1] != 'WITHOUT_CLASSIFICATION':
-                if DATASET == 1 or DATASET == 3:
+                if DATASET == 1 or DATASET == 3 or DATASET == 4:
                     comments.append(standardize(row[2]))
                     projects_name.append(row[0])
                     classifications.append(row[1])
@@ -229,6 +233,10 @@ def main(binary_classification, dataset) :
         INPUT_FILE = zhao_input_file
         OUTPUT_FILE_BINARY = zhao_output_file_binary
         OUTPUT_FOLDER_BINARY = zhao_output_folder_binary
+    elif DATASET == 4:
+        INPUT_FILE = maldonadoplus_input_file
+        OUTPUT_FILE_BINARY = maldonadoplus_output_file_binary
+        OUTPUT_FOLDER_BINARY = maldonadoplus_output_folder_binary
 
     if BINARY_CLASSIFICATION:
         output_folder = OUTPUT_FOLDER_BINARY
@@ -318,8 +326,9 @@ def main(binary_classification, dataset) :
 
 # BINARY_CLASSIFICATION = True prende l'intero dataset (WITHOUT_CLASSIFICATION + tutte le altre etichette)
 # BINARY_CLASSIFICATION = False prende solo le altre etichette (non prende WITHOUT_CLASSIFICATION)
-# DATASET = 1 (Maldonado), DATASET = 2 (DebtHunter), DATASET = 3 (Zhao)
+# DATASET = 1 (Maldonado), DATASET = 2 (DebtHunter), DATASET = 3 (Zhao), DATASET = 3 (Maldonado Plus)
 #main(True, False) # DebtHunter binary
-main(True, 1) # Maldonado binary
+#main(True, 1) # Maldonado binary
 #main(True, 3) # Zhao binary
 #main(False, 1)
+main(True, 4) 
