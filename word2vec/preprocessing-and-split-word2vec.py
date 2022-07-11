@@ -187,7 +187,7 @@ def word2vec(x_train, x_validation, x_test, output_folder, tokenizer, matrix):
 
 def word2vec_tokenizer_matrix(comments):
     print("Start word2vec")
-    max_words = 7000
+    max_words = 5097
     tokenizer = kprocessing.text.Tokenizer(lower=True, split=' ', num_words=max_words, oov_token="<pad>", filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
     tokenizer.fit_on_texts(comments)
     voc = tokenizer.word_index
@@ -246,7 +246,8 @@ def main(binary_classification, dataset) :
 
     comments, labels = read_comments_and_labels() 
     #MAX_LEN = len(max(comments, key=len))
-    MAX_LEN = 2000
+    #MAX_LEN = 2000
+    MAX_LEN = 5097
     print(MAX_LEN)
 
     df = create_dataframe(comments, labels)
@@ -331,4 +332,4 @@ def main(binary_classification, dataset) :
 #main(True, 1) # Maldonado binary
 #main(True, 3) # Zhao binary
 #main(False, 1)
-main(True, 4) 
+main(False, 1) 

@@ -33,7 +33,7 @@ start_time = time.time()
 
 base_dir = ''
 epochs = 5
-batch_size = 64
+batch_size = 32
 
 # utilizzo di una GPU su scheda grafica locale
 sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
@@ -151,12 +151,11 @@ def create_model(train_sequences, emb_matrix) :
     input_ = layers.Input(shape = train_sequences[0,:].shape, )
     x = layers.Embedding(5097+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
     #x = layers.Bidirectional(layers.LSTM(64))(x) # LSTM layer
-    x = layers.SpatialDropout1D(0.7)(x)
-    x = layers.LSTM(64)(x)
+    x = layers.LSTM(64, dropout=0.5)(x)
     x = layers.Dense(64, activation='relu')(x)
     output = tf.keras.layers.Dense(5, activation='softmax')(x)
     model = models.Model(input_, output)
-    opt = optimizers.Adam(learning_rate=0.005)
+    opt = optimizers.Adam(learning_rate=0.005, beta_1=0.9)
     model.compile(optimizer=opt, loss=tf.keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
     
     model.summary()
