@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import arff
   
 path = "ZHAO/"
 projects = ["Ant", "ArgoUML", "Columba", "Dubbo", "EMF", "Gradle", "Groovy", "Hibernate", "Hive", "JEdit",
@@ -19,6 +20,8 @@ def create_and_save_dataframe():
     })
 
     dataset.to_csv("datasets/zhao-dataset.csv", index=False)
+
+    return dataset
 
 # converts "positive" into "SATD" and "negative" into "WITHOUT_CLASSIFICATION"
 def convert_labels_text():
@@ -51,6 +54,11 @@ def read_data_and_label(project):
     # create a list containing the name of the project with a lenght equal to the amount of data
     projects_name.extend([project] * len(data))
 
+def remove_non_satd(dataset):
+    print(dataset.shape)
+    dataset = dataset[dataset.classification == "SATD"]
+    print(dataset.shape)
+
 
 def main(): 
     for project in projects:
@@ -60,7 +68,8 @@ def main():
     assert len(comments) == 118316 and len(labels) == 118316 and len(projects_name) == 118316
 
     convert_labels_text()
-    create_and_save_dataframe()
+    dataset = create_and_save_dataframe()
+    remove_non_satd(dataset)
 
 
 main()

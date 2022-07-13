@@ -16,6 +16,8 @@ from sklearn.model_selection import StratifiedShuffleSplit
 from gensim import models
 from imblearn.over_sampling import SMOTE 
 import time
+from imblearn.over_sampling import RandomOverSampler 
+from imblearn.under_sampling import RandomUnderSampler 
 
 
 nltk.download('punkt')
@@ -32,14 +34,14 @@ physical_devices = tf.config.list_physical_devices("GPU")
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 start_time = time.time()
-base_dir = '../'
+base_dir = ''
 
 w2v_path = base_dir + "word2vec/model/"
 
 maldonado_input_file = base_dir + 'datasets/maldonado-dataset.csv'
-maldonado_output_file_binary = base_dir + 'word2vec/binary/DatasetD1/df-maldonado-binary.csv'
-maldonado_output_file_multiclass = base_dir + 'word2vec/multiclass/DatasetD1/df-maldonado-multiclass.csv'
-maldonado_output_folder_multiclass = base_dir + 'word2vec/multiclass/DatasetD1/'
+maldonado_output_file_binary = base_dir + 'smote/word2vec/binary/DatasetD1/df-maldonado-binary.csv'
+maldonado_output_file_multiclass = base_dir + 'smote/word2vec/multiclass/DatasetD1/df-maldonado-multiclass.csv'
+maldonado_output_folder_multiclass = base_dir + 'smote/word2vec/multiclass/DatasetD1/'
 maldonado_output_folder_binary = base_dir + 'smote/word2vec/binary/DatasetD1/'
 
 zhao_input_file = base_dir + 'datasets/zhao-dataset.csv'
@@ -160,7 +162,7 @@ def delete_folder(path) :
         #os.rmdir(path)
 
 
-def word2vec(x_train, y_train, x_validation, y_validation, x_test, y_test, output_folder, tokenizer, matrix):
+def word2vec(x_train, y_train, x_validation, y_validation, x_test, output_folder, tokenizer, matrix):
     print("Start word2vec")
 
     train_sequences = kprocessing.sequence.pad_sequences(tokenizer.texts_to_sequences(x_train), maxlen=MAX_LEN)
@@ -170,24 +172,24 @@ def word2vec(x_train, y_train, x_validation, y_validation, x_test, y_test, outpu
     print(train_sequences.shape, validation_sequences.shape, test_sequences.shape)
     #print(x_train)
 
-    sm_x_train, sm_y_train = smote(train_sequences, y_train)
-    sm_x_val, sm_y_val = smote(validation_sequences, y_validation)
-    sm_x_test, sm_y_test = smote(test_sequences, y_test)
+    sm_x_train, sm_y_train = smote(train_sequences, y_train, True)
+    sm_x_val, sm_y_val = smote(validation_sequences, y_validation, False)
+    #sm_x_test, sm_y_test = smote(test_sequences, y_test)
 
     
 
     np.savetxt(output_folder + '/emb_matrix.csv', matrix, delimiter=",")
     np.savetxt(output_folder + '/train_sequences.csv', sm_x_train, delimiter=",")
     np.savetxt(output_folder + '/validation_sequences.csv', sm_x_val, delimiter=",")
-    np.savetxt(output_folder + '/test_sequences.csv', sm_x_test, delimiter=",")
+    np.savetxt(output_folder + '/test_sequences.csv', test_sequences, delimiter=",")
     print("End word2vec")
 
-    return sm_y_train, sm_y_val, sm_y_test
+    return sm_y_train, sm_y_val
 
 
 def word2vec_tokenizer_matrix(comments):
     print("Start word2vec")
-    max_words = 7000
+    max_words = 5097
     tokenizer = kprocessing.text.Tokenizer(lower=True, split=' ', num_words=max_words, oov_token="<pad>", filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
     tokenizer.fit_on_texts(comments)
     voc = tokenizer.word_index
@@ -211,17 +213,28 @@ def word2vec_tokenizer_matrix(comments):
     return tokenizer, emb_matrix
 
 
-def smote(x_train, y_train):
-    print("Before OverSampling, counts of label '1': {}".format(sum(y_train==1)))
-    print("Before OverSampling, counts of label '0': {}".format(sum(y_train==0)))
+def smote(x, y, isTrain):
+    print("Before SMOTE")
+    unique_elements, counts_elements = np.unique(y, return_counts=True)
+    print(np.asarray((unique_elements, counts_elements)))
 
-    sm = SMOTE(random_state=2)
-    sm_x_train, sm_y_train = sm.fit_resample(x_train, y_train)
+    if isTrain:
+        strategy = {0: counts_elements[0], 1: counts_elements[1], 2:counts_elements[2], 3: 200, 4: 250}
+        """over = RandomOverSampler(sampling_strategy=0.1)
+        sm_x_train, sm_y_train = over.fit_resample(x, y)
+        under = RandomUnderSampler(sampling_strategy=0.5)
+        sm_x_train, sm_y_train = under.fit_resample(x, y)"""
+    else:
+        strategy = {0: counts_elements[0], 1: counts_elements[1], 2:counts_elements[2], 3: 50, 4: 70}
 
-    print("After OverSampling, counts of label '1': {}".format(sum(sm_y_train==1)))
-    print("After OverSampling, counts of label '0': {}".format(sum(sm_y_train==0)))
+    sm = SMOTE(sampling_strategy=strategy)
+    sm_x, sm_y = sm.fit_resample(x, y)
 
-    return sm_x_train, sm_y_train
+    print("After SMOTE")
+    unique_elements, counts_elements = np.unique(sm_y, return_counts=True)
+    print(np.asarray((unique_elements, counts_elements)))
+
+    return sm_x, sm_y
 
 
 def main(binary_classification, dataset) :
@@ -275,7 +288,9 @@ def main(binary_classification, dataset) :
 
     tokenizer, matrix = word2vec_tokenizer_matrix(df_comments)
 
-    for train_val_index, test_index in kf.split(x, y):
+    #for train_val_index, test_index in kf.split(x, y):
+    splitter = StratifiedShuffleSplit(n_splits=10, test_size=0.1)
+    for train_val_index, test_index in splitter.split(x, y):
         print("\nSET: ", set_number)
 
         x_train_val, y_train_val = x[train_val_index], y[train_val_index] 
@@ -302,7 +317,7 @@ def main(binary_classification, dataset) :
 
         path = output_folder + 'Round' + str(set_number)
         os.mkdir(path)   
-        sm_y_train, sm_y_val, sm_y_test = word2vec(x_train, y_train, x_validation, y_validation, x_test, y_test, path, tokenizer, matrix)
+        sm_y_train, sm_y_val = word2vec(x_train, y_train, x_validation, y_validation, x_test, path, tokenizer, matrix)
         
 
         # save train, validation and test as csv
@@ -311,7 +326,7 @@ def main(binary_classification, dataset) :
         #np.savetxt(path + '/validation_data.csv', x_validation, delimiter=",", fmt="%s")
         np.savetxt(path + '/validation_labels.csv', sm_y_val.astype(int), delimiter=",", fmt="%i")
         #np.savetxt(path + '/testing_data.csv', x_test, delimiter=",", fmt="%s")
-        np.savetxt(path + '/testing_labels.csv', sm_y_test.astype(int), delimiter=",", fmt="%i")
+        np.savetxt(path + '/testing_labels.csv', y_test.astype(int), delimiter=",", fmt="%i")
 
         set_number = set_number + 1
 
@@ -323,5 +338,6 @@ def main(binary_classification, dataset) :
 # BINARY_CLASSIFICATION = False prende solo le altre etichette (non prende WITHOUT_CLASSIFICATION)
 # DATASET = 1 (Maldonado), DATASET = 2 (DebtHunter), DATASET = 3 (Zhao)
 #main(True, False) # DebtHunter binary
-main(True, 1) # Maldonado binary
+#main(True, 1) # Maldonado binary
 #main(True, 3) # Zhao binary
+main(False, 1)

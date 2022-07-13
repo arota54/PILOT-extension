@@ -246,8 +246,7 @@ def main(binary_classification, dataset) :
 
     comments, labels = read_comments_and_labels() 
     #MAX_LEN = len(max(comments, key=len))
-    #MAX_LEN = 2000
-    MAX_LEN = 5097
+    MAX_LEN = 2000
     print(MAX_LEN)
 
     df = create_dataframe(comments, labels)
@@ -267,7 +266,8 @@ def main(binary_classification, dataset) :
 
     tokenizer, matrix = word2vec_tokenizer_matrix(df_comments)
 
-    for train_val_index, test_index in kf.split(df_comments, df_labels):
+    splitter = StratifiedShuffleSplit(n_splits=10, test_size=0.1)
+    for train_val_index, test_index in splitter.split(x, y):
         print("\nSET: ", set_number)
 
         x_train_val, y_train_val = df_comments.iloc[train_val_index], df_labels.iloc[train_val_index] 
