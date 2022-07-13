@@ -67,7 +67,7 @@ def create_and_save_arff(dataset):
     dataset_arff = dataset.drop('classification', axis=1)
 
     arff.dump('datasets/zhao-multiclass.arff'
-      , dataset.values
+      , dataset_arff.values
       , relation='comments'
       , names=["projectname", "package", "top_package", "comment"])
 
