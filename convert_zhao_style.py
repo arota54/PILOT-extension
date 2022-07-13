@@ -55,10 +55,21 @@ def read_data_and_label(project):
     projects_name.extend([project] * len(data))
 
 def remove_non_satd(dataset):
-    print(dataset.shape)
     dataset = dataset[dataset.classification == "SATD"]
-    print(dataset.shape)
+    assert dataset.shape[0] == 5807
+    
+    return dataset
 
+def create_and_save_arff(dataset):
+    dataset.insert(1, "package", dataset.projectname)
+    dataset.insert(2, "top_package", dataset.projectname)
+
+    dataset_arff = dataset.drop('classification', axis=1)
+
+    arff.dump('datasets/zhao-multiclass.arff'
+      , dataset.values
+      , relation='comments'
+      , names=["projectname", "package", "top_package", "comment"])
 
 def main(): 
     for project in projects:
@@ -69,7 +80,8 @@ def main():
 
     convert_labels_text()
     dataset = create_and_save_dataframe()
-    remove_non_satd(dataset)
+    dataset = remove_non_satd(dataset)
+    create_and_save_arff(dataset)
 
 
 main()
