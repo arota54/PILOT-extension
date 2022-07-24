@@ -31,8 +31,8 @@ sess = tf.compat.v1.Session(config=config) """
 start_time = time.time()
 
 base_dir = ''
-epochs = 5
-batch_size = 32
+epochs = 7
+batch_size = 16
 
 # utilizzo di una GPU su scheda grafica locale
 sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
@@ -151,7 +151,7 @@ def create_model(train_sequences, emb_matrix) :
     #x = Dropout(0.5)(x)
     output = Dense(5, activation='softmax')(x)
     model = models.Model(input_, output)
-    opt = optimizers.Adam(learning_rate=0.01, beta_1=0.9)
+    opt = optimizers.Adam()
     model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(), optimizer=opt, metrics=['accuracy'])
 
     # result-4: 5 epochs, 64 batch_size
@@ -269,6 +269,7 @@ def runExperiment(root):
 loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/multiclass/DatasetD1/")
 #loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/binary/DatasetZhao/")
 #loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/binary/DatasetMaldonadoPlus/")
+#loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/multiclass/pilot/")
 
 print(loss.shape)
 print(accuracy.shape)

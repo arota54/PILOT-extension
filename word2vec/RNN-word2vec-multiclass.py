@@ -32,8 +32,8 @@ sess = tf.compat.v1.Session(config=config) """
 start_time = time.time()
 
 base_dir = ''
-epochs = 7
-batch_size = 32
+epochs = 5
+batch_size = 16
 
 # utilizzo di una GPU su scheda grafica locale
 sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(log_device_placement=True))
@@ -138,10 +138,10 @@ def create_model(train_sequences, emb_matrix) :
 
     # result-1: 8 epochs, 128 batch_size
     input_ = layers.Input(shape = train_sequences[0,:].shape, )
-    x = layers.Embedding(5097+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
+    x = layers.Embedding(7000+1, emb_matrix.shape[1], weights=[emb_matrix], trainable=False)(input_)
     #x = layers.Bidirectional(layers.LSTM(64))(x) # LSTM layer
-    x = layers.LSTM(8, dropout=0.5)(x)
-    x = layers.Dense(16, activation='relu')(x)
+    x = layers.LSTM(64, dropout=0.5)(x)
+    x = layers.Dense(64, activation='relu')(x)
     
     #x = layers.Dense(64, activation='relu')(x)
     output = tf.keras.layers.Dense(5, activation='softmax')(x)
@@ -222,7 +222,8 @@ def runExperiment(root):
     return (loss, accuracy, val_loss, val_accuracy, predictions, y_test)
 
 
-loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/multiclass/DatasetD1/")
+#loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/multiclass/DatasetD1/")
+loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/multiclass/pilot/")
 #loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "word2vec/binary/DatasetZhao/")
 #loss, accuracy, val_loss, val_accuracy, predictions, y_test = runExperiment(base_dir + "smote/word2vec/multiclass/DatasetD1/")
 

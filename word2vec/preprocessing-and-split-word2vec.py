@@ -48,6 +48,10 @@ maldonadoplus_input_file = base_dir + 'datasets/maldonado-plus-dataset.csv'
 maldonadoplus_output_file_binary = base_dir + 'word2vec/binary/DatasetMaldonadoPlus/df-maldonadoplus-binary.csv'
 maldonadoplus_output_folder_binary = base_dir + 'word2vec/binary/DatasetMaldonadoPlus/'
 
+pilot_input_file = base_dir + 'datasets/pilot-dataset-multiclass.csv'
+pilot_output_file_multiclass = base_dir + 'word2vec/multiclass/pilot/df-pilot-multiclass.csv'
+pilot_output_folder_multiclass = base_dir + 'word2vec/multiclass/pilot/'
+
 debthunter_input_file = base_dir + 'datasets/debthunter-dataset.csv'
 debthunter_output_file_binary = base_dir + 'word2vec/binary/DatasetD2/df-debthunter-binary.csv'
 debthunter_output_file_multiclass = base_dir + 'word2vec/multiclass/DatasetD2/df-debthunter-multiclass.csv'
@@ -105,7 +109,7 @@ def read_comments_and_labels():
         for row in csv_reader:
             
             if BINARY_CLASSIFICATION or row[1] != 'WITHOUT_CLASSIFICATION':
-                if DATASET == 1 or DATASET == 3 or DATASET == 4:
+                if DATASET == 1 or DATASET == 3 or DATASET == 4 or DATASET == 5:
                     comments.append(standardize(row[2]))
                     projects_name.append(row[0])
                     classifications.append(row[1])
@@ -187,7 +191,7 @@ def word2vec(x_train, x_validation, x_test, output_folder, tokenizer, matrix):
 
 def word2vec_tokenizer_matrix(comments):
     print("Start word2vec")
-    max_words = 5097
+    max_words = 7000
     tokenizer = kprocessing.text.Tokenizer(lower=True, split=' ', num_words=max_words, oov_token="<pad>", filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
     tokenizer.fit_on_texts(comments)
     voc = tokenizer.word_index
@@ -237,6 +241,10 @@ def main(binary_classification, dataset) :
         INPUT_FILE = maldonadoplus_input_file
         OUTPUT_FILE_BINARY = maldonadoplus_output_file_binary
         OUTPUT_FOLDER_BINARY = maldonadoplus_output_folder_binary
+    elif DATASET == 5:
+        INPUT_FILE = pilot_input_file
+        OUTPUT_FILE_MULTICLASS = pilot_output_file_multiclass
+        OUTPUT_FOLDER_MULTICLASS = pilot_output_folder_multiclass
 
     if BINARY_CLASSIFICATION:
         output_folder = OUTPUT_FOLDER_BINARY
@@ -327,9 +335,9 @@ def main(binary_classification, dataset) :
 
 # BINARY_CLASSIFICATION = True prende l'intero dataset (WITHOUT_CLASSIFICATION + tutte le altre etichette)
 # BINARY_CLASSIFICATION = False prende solo le altre etichette (non prende WITHOUT_CLASSIFICATION)
-# DATASET = 1 (Maldonado), DATASET = 2 (DebtHunter), DATASET = 3 (Zhao), DATASET = 3 (Maldonado Plus)
+# DATASET = 1 (Maldonado), DATASET = 2 (DebtHunter), DATASET = 3 (Zhao), DATASET = 4 (Maldonado Plus), DATASET = 5 (pilot)
 #main(True, False) # DebtHunter binary
 #main(True, 1) # Maldonado binary
 #main(True, 3) # Zhao binary
 #main(False, 1)
-main(False, 1) 
+main(False, 5) 
