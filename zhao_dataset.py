@@ -167,6 +167,17 @@ def create_and_save_pilot_multiclass(zhao_g, maldonado):
     new_dataset = pd.concat([zhao_g, maldonado], axis=0)
     new_dataset.to_csv("datasets/pilot-dataset-multiclass.csv", index=False)
 
+
+
+    data = new_dataset.drop(labels=["projectname"], axis=1)
+    data = data[['commenttext','classification']]
+
+    # input for DebtHunter
+    arff.dump('datasets/pilot-dataset.arff'
+      , data.values
+      , relation='comments'
+      , names=["comment", "classification"])
+
 def main(): 
     for project in projects:
         read_data_and_label(project)
